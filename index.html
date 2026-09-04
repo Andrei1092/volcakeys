@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода в Тюмени</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="weather-card">
+        <div class="location">
+            <h1>Тюмень</h1>
+            <p id="date">Загрузка даты...</p>
+        </div>
+        
+        <div class="weather-info">
+            <div class="temp-box">
+                <span id="temperature">--</span><span class="unit">°C</span>
+            </div>
+            <div class="condition" id="condition">Загрузка погоды...</div>
+        </div>
+
+        <div class="details">
+            <div class="detail-item">
+                <span>Влажность</span>
+                <strong id="humidity">--%</strong>
+            </div>
+            <div class="detail-item">
+                <span>Ветер</span>
+                <strong id="wind">-- м/с</strong>
+            </div>
+            <div class="detail-item">
+                <span>Ощущается</span>
+                <strong id="feels-like">--°C</strong>
+            </div>
+        </div>
+
+        <button id="refresh-btn" onclick="fetchWeather()">Обновить</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
