@@ -1,44 +1,408 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Погода в Тюмени</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Погодный информер</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: clamp(10px, 2vh, 20px);
+    position: relative;
+}
+
+.background-animation {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: float 15s infinite ease-in-out;
+}
+
+.circle:nth-child(1) { width: 80px; height: 80px; top: 10%; left: 20%; animation-delay: 0s; }
+.circle:nth-child(2) { width: 120px; height: 120px; top: 60%; left: 80%; animation-delay: 2s; }
+.circle:nth-child(3) { width: 60px; height: 60px; top: 80%; left: 10%; animation-delay: 4s; }
+.circle:nth-child(4) { width: 100px; height: 100px; top: 30%; left: 70%; animation-delay: 1s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.1; }
+    50% { transform: translateY(-100px) rotate(180deg); opacity: 0.3; }
+}
+
+#wrapper {
+    position: relative;
+    z-index: 1;
+    padding: clamp(15px, 2vh, 30px);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: clamp(15px, 3vh, 30px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: clamp(300px, 90vw, 600px);
+    max-height: 95vh;
+    overflow-y: auto;
+    animation: fadeIn 1s ease-in;
+}
+
+#wrapper::-webkit-scrollbar { width: 6px; }
+#wrapper::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+#wrapper::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+#wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loading {
+    text-align: center;
+    font-size: clamp(14px, 2.5vh, 20px);
+    padding: clamp(20px, 4vh, 40px);
+}
+
+.spinner {
+    width: clamp(40px, 6vh, 50px);
+    height: clamp(40px, 6vh, 50px);
+    margin: clamp(10px, 2vh, 20px) auto;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.city {
+    font-size: clamp(20px, 4vh, 36px);
+    font-weight: 700;
+    margin-bottom: clamp(5px, 1vh, 10px);
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.date-time {
+    text-align: center;
+    font-size: clamp(12px, 2vh, 18px);
+    opacity: 0.9;
+    margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.main-temp-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(10px, 2vh, 25px);
+    margin: clamp(10px, 2vh, 20px) 0;
+    flex-wrap: wrap;
+}
+
+.weather-icon {
+    font-size: clamp(50px, 10vh, 100px);
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.temp-main {
+    font-size: clamp(50px, 10vh, 90px);
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+}
+
+.desc {
+    text-align: center;
+    font-size: clamp(16px, 3vh, 24px);
+    margin-bottom: clamp(5px, 1vh, 10px);
+    text-transform: capitalize;
+    font-weight: 300;
+}
+
+.feels-like {
+    text-align: center;
+    font-size: clamp(12px, 2.5vh, 18px);
+    opacity: 0.8;
+    margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: clamp(8px, 1.5vh, 15px);
+    margin-top: clamp(10px, 2vh, 20px);
+}
+
+.detail-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: clamp(10px, 2vh, 15px);
+    padding: clamp(8px, 1.5vh, 15px);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.detail-card:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+.detail-icon { font-size: clamp(20px, 4vh, 32px); margin-bottom: clamp(4px, 1vh, 8px); }
+.detail-label { font-size: clamp(10px, 1.8vh, 14px); opacity: 0.8; margin-bottom: clamp(3px, 0.5vh, 5px); }
+.detail-value { font-size: clamp(14px, 2.5vh, 20px); font-weight: 600; }
+
+.progress-container { margin-top: clamp(10px, 2vh, 20px); }
+.progress-item { margin-bottom: clamp(10px, 2vh, 15px); }
+.progress-label { display: flex; justify-content: space-between; margin-bottom: clamp(4px, 1vh, 8px); font-size: clamp(11px, 2vh, 15px); }
+.progress-bar { width: 100%; height: clamp(8px, 1.5vh, 12px); background: rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; position: relative; }
+.progress-fill { height: 100%; border-radius: 10px; transition: width 1.5s ease-out; background: linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,1) 100%); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+.sun-times {
+    display: flex;
+    justify-content: space-around;
+    margin-top: clamp(10px, 2vh, 20px);
+    padding-top: clamp(10px, 2vh, 15px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+.sun-time { text-align: center; }
+.sun-icon { font-size: clamp(25px, 5vh, 40px); margin-bottom: clamp(4px, 1vh, 8px); }
+.sun-label { font-size: clamp(10px, 1.8vh, 14px); opacity: 0.8; }
+.sun-value { font-size: clamp(12px, 2.5vh, 18px); font-weight: 600; margin-top: clamp(3px, 0.5vh, 5px); }
+
+.actions-container {
+    text-align: center;
+    margin-top: clamp(15px, 2vh, 25px);
+}
+
+.refresh-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    padding: clamp(8px, 1.5vh, 12px) clamp(20px, 3vw, 30px);
+    border-radius: 12px;
+    font-size: clamp(12px, 2vh, 16px);
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.refresh-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+    .details-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
 </head>
 <body>
-    <div class="weather-card">
-        <div class="location">
-            <h1>Тюмень</h1>
-            <p id="date">Загрузка даты...</p>
+<div class="background-animation">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+</div>
+
+<div id="wrapper">
+    <div class="loading">
+        <div class="spinner"></div>
+        <div>Загрузка данных...</div>
+    </div>
+    <div id="weather-content" style="display:none;">
+        <div class="city"></div>
+        <div class="date-time"></div>
+        
+        <div class="main-temp-container">
+            <div class="weather-icon"></div>
+            <div class="temp-main"></div>
         </div>
         
-        <div class="weather-info">
-            <div class="temp-box">
-                <span id="temperature">--</span><span class="unit">°C</span>
+        <div class="desc"></div>
+        <div class="feels-like"></div>
+        
+        <div class="details-grid">
+            <div class="detail-card">
+                <div class="detail-icon">💨</div>
+                <div class="detail-label">Ветер</div>
+                <div class="detail-value wind-speed"></div>
             </div>
-            <div class="condition" id="condition">Загрузка погоды...</div>
+            <div class="detail-card">
+                <div class="detail-icon">💧</div>
+                <div class="detail-label">Влажность</div>
+                <div class="detail-value humidity"></div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-icon">🌡️</div>
+                <div class="detail-label">Давление</div>
+                <div class="detail-value pressure"></div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-icon">👁️</div>
+                <div class="detail-label">Видимость</div>
+                <div class="detail-value visibility"></div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-item">
+                <div class="progress-label">
+                    <span>Влажность</span>
+                    <span class="humidity-percent"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="humidity-bar"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label">
+                    <span>Облачность</span>
+                    <span class="clouds-percent"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="clouds-bar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sun-times">
+            <div class="sun-time">
+                <div class="sun-icon">🌅</div>
+                <div class="sun-label">Восход</div>
+                <div class="sun-value sunrise"></div>
+            </div>
+            <div class="sun-time">
+                <div class="sun-icon">🌇</div>
+                <div class="sun-label">Закат</div>
+                <div class="sun-value sunset"></div>
+            </div>
         </div>
 
-        <div class="details">
-            <div class="detail-item">
-                <span>Влажность</span>
-                <strong id="humidity">--%</strong>
-            </div>
-            <div class="detail-item">
-                <span>Ветер</span>
-                <strong id="wind">-- м/с</strong>
-            </div>
-            <div class="detail-item">
-                <span>Ощущается</span>
-                <strong id="feels-like">--°C</strong>
-            </div>
+        <div class="actions-container">
+            <button class="refresh-btn" onclick="fetchWeather()">🔄 Обновить</button>
         </div>
-
-        <button id="refresh-btn" onclick="fetchWeather()">Обновить</button>
     </div>
+</div>
 
-    <script src="script.js"></script>
+<script>
+const apiKey = 'ee55c147b4b02ec88cbd9a86bdd80407';
+const city = 'Tyumen';
+
+function getWeatherEmoji(icon) {
+    const iconMap = {
+        '01d': '☀️', '01n': '🌙',
+        '02d': '⛅', '02n': '☁️',
+        '03d': '☁️', '03n': '☁️',
+        '04d': '☁️', '04n': '☁️',
+        '09d': '🌧️', '09n': '🌧️',
+        '10d': '🌦️', '10n': '🌧️',
+        '11d': '⛈️', '11n': '⛈️',
+        '13d': '❄️', '13n': '❄️',
+        '50d': '🌫️', '50n': '🌫️'
+    };
+    return iconMap[icon] || '🌤️';
+}
+
+function formatTime(timestamp, timezone) {
+    const date = new Date((timestamp + timezone) * 1000);
+    return date.toUTCString().slice(-12, -7);
+}
+
+function updateDateTime() {
+    const now = new Date();
+    const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    
+    const dayName = days[now.getDay()];
+    const day = now.getDate();
+    const month = months[now.getMonth()];
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    return `${dayName}, ${day} ${month} | ${hours}:${minutes}`;
+}
+
+function fetchWeather() {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&lang=ru&units=metric`)
+        .then(r => r.json())
+        .then(data => {
+            document.querySelector('.loading').style.display = 'none';
+            document.getElementById('weather-content').style.display = 'block';
+            
+            document.querySelector('.city').textContent = data.name;
+            document.querySelector('.date-time').textContent = updateDateTime();
+            document.querySelector('.weather-icon').textContent = getWeatherEmoji(data.weather[0].icon);
+            document.querySelector('.temp-main').textContent = Math.round(data.main.temp) + '°';
+            document.querySelector('.desc').textContent = data.weather[0].description;
+            document.querySelector('.feels-like').textContent = `Ощущается как ${Math.round(data.main.feels_like)}°`;
+            
+            document.querySelector('.wind-speed').textContent = data.wind.speed + ' м/с';
+            document.querySelector('.humidity').textContent = data.main.humidity + '%';
+            document.querySelector('.pressure').textContent = data.main.pressure + ' гПа';
+            document.querySelector('.visibility').textContent = (data.visibility / 1000).toFixed(1) + ' км';
+            
+            document.querySelector('.humidity-percent').textContent = data.main.humidity + '%';
+            document.getElementById('humidity-bar').style.width = data.main.humidity + '%';
+            
+            document.querySelector('.clouds-percent').textContent = data.clouds.all + '%';
+            document.getElementById('clouds-bar').style.width = data.clouds.all + '%';
+            
+            document.querySelector('.sunrise').textContent = formatTime(data.sys.sunrise, data.timezone);
+            document.querySelector('.sunset').textContent = formatTime(data.sys.sunset, data.timezone);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            document.querySelector('.loading').innerHTML = '<div>❌ Ошибка загрузки</div>';
+        });
+}
+
+fetchWeather();
+
+// Часы каждую минуту
+setInterval(() => {
+    document.querySelector('.date-time').textContent = updateDateTime();
+}, 60000);
+
+// Автообновление погоды каждые 15 минут (15 * 60 * 1000 мс)
+setInterval(fetchWeather, 15 * 60 * 1000);
+</script>
 </body>
 </html>
