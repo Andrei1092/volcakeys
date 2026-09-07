@@ -201,51 +201,6 @@ body {
 .sun-label { font-size: clamp(10px, 1.8vh, 14px); opacity: 0.8; }
 .sun-value { font-size: clamp(12px, 2.5vh, 18px); font-weight: 600; margin-top: clamp(3px, 0.5vh, 5px); }
 
-/* Блок прогноза на 6 часов */
-.forecast-container {
-    margin-top: clamp(15px, 2vh, 25px);
-    padding-top: clamp(10px, 2vh, 15px);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.forecast-title {
-    font-size: clamp(12px, 2vh, 15px);
-    opacity: 0.8;
-    margin-bottom: clamp(8px, 1vh, 12px);
-    text-align: center;
-}
-
-.forecast-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: clamp(5px, 1vw, 10px);
-}
-
-.forecast-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: clamp(6px, 1vh, 10px) 4px;
-    text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.forecast-time {
-    font-size: clamp(10px, 1.5vh, 12px);
-    opacity: 0.8;
-    margin-bottom: 4px;
-}
-
-.forecast-icon {
-    font-size: clamp(18px, 3vh, 26px);
-    margin: 2px 0;
-}
-
-.forecast-temp {
-    font-size: clamp(11px, 2vh, 14px);
-    font-weight: 600;
-}
-
 .actions-container {
     text-align: center;
     margin-top: clamp(15px, 2vh, 25px);
@@ -270,11 +225,12 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-.refresh-btn:active { transform: translateY(0); }
+.refresh-btn:active {
+    transform: translateY(0);
+}
 
 @media (max-width: 480px) {
     .details-grid { grid-template-columns: repeat(2, 1fr); }
-    .forecast-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
 }
 </style>
 </head>
@@ -360,15 +316,8 @@ body {
             </div>
         </div>
 
-        <div class="forecast-container">
-            <div class="forecast-title">Прогноз на ближайшие часы</div>
-            <div class="forecast-grid" id="forecast-grid">
-                <!-- Сюда динамически добавятся 6 карточек прогноза -->
-            </div>
-        </div>
-
         <div class="actions-container">
-            <button class="refresh-btn" onclick="fetchAllWeather()">🔄 Обновить</button>
+            <button class="refresh-btn" onclick="fetchWeather()">🔄 Обновить</button>
         </div>
     </div>
 </div>
@@ -411,76 +360,49 @@ function updateDateTime() {
     return `${dayName}, ${day} ${month} | ${hours}:${minutes}`;
 }
 
-async function fetchAllWeather() {
-    try {
-        // Текущая погода
-        const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&lang=ru&units=metric`);
-        const currentData = await currentRes.json();
-
-        // Прогноз на 5 дней / 3 часа (forecast)
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&lang=ru&units=metric`);
-        const forecastData = await forecastRes.json();
-
-        document.querySelector('.loading').style.display = 'none';
-        document.getElementById('weather-content').style.display = 'block';
-        
-        // Заполнение текущей погоды
-        document.querySelector('.city').textContent = currentData.name;
-        document.querySelector('.date-time').textContent = updateDateTime();
-        document.querySelector('.weather-icon').textContent = getWeatherEmoji(currentData.weather[0].icon);
-        document.querySelector('.temp-main').textContent = Math.round(currentData.main.temp) + '°';
-        document.querySelector('.desc').textContent = currentData.weather[0].description;
-        document.querySelector('.feels-like').textContent = `Ощущается как ${Math.round(currentData.main.feels_like)}°`;
-        
-        document.querySelector('.wind-speed').textContent = currentData.wind.speed + ' м/с';
-        document.querySelector('.humidity').textContent = currentData.main.humidity + '%';
-        document.querySelector('.pressure').textContent = currentData.main.pressure + ' гПа';
-        document.querySelector('.visibility').textContent = (currentData.visibility / 1000).toFixed(1) + ' км';
-        
-        document.querySelector('.humidity-percent').textContent = currentData.main.humidity + '%';
-        document.getElementById('humidity-bar').style.width = currentData.main.humidity + '%';
-        
-        document.querySelector('.clouds-percent').textContent = currentData.clouds.all + '%';
-        document.getElementById('clouds-bar').style.width = currentData.clouds.all + '%';
-        
-        document.querySelector('.sunrise').textContent = formatTime(currentData.sys.sunrise, currentData.timezone);
-        document.querySelector('.sunset').textContent = formatTime(currentData.sys.sunset, currentData.timezone);
-
-        // Заполнение прогноза на ближайшие 6 часов (берем первые 6 элементов из списка forecast)
-        const forecastGrid = document.getElementById('forecast-grid');
-        forecastGrid.innerHTML = '';
-        
-        const next6Hours = forecastData.list.slice(0, 6);
-        next6Hours.forEach(item => {
-            const timeStr = item.dt_txt.slice(11, 16); // получаем часы и минуты "ЧЧ:ММ"
-            const tempStr = Math.round(item.main.temp) + '°';
-            const iconEmoji = getWeatherEmoji(item.weather[0].icon);
-
-            const card = document.createElement('div');
-            card.className = 'forecast-card';
-            card.innerHTML = `
-                <div class="forecast-time">${timeStr}</div>
-                <div class="forecast-icon">${iconEmoji}</div>
-                <div class="forecast-temp">${tempStr}</div>
-            `;
-            forecastGrid.appendChild(card);
+function fetchWeather() {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&lang=ru&units=metric`)
+        .then(r => r.json())
+        .then(data => {
+            document.querySelector('.loading').style.display = 'none';
+            document.getElementById('weather-content').style.display = 'block';
+            
+            document.querySelector('.city').textContent = data.name;
+            document.querySelector('.date-time').textContent = updateDateTime();
+            document.querySelector('.weather-icon').textContent = getWeatherEmoji(data.weather[0].icon);
+            document.querySelector('.temp-main').textContent = Math.round(data.main.temp) + '°';
+            document.querySelector('.desc').textContent = data.weather[0].description;
+            document.querySelector('.feels-like').textContent = `Ощущается как ${Math.round(data.main.feels_like)}°`;
+            
+            document.querySelector('.wind-speed').textContent = data.wind.speed + ' м/с';
+            document.querySelector('.humidity').textContent = data.main.humidity + '%';
+            document.querySelector('.pressure').textContent = data.main.pressure + ' гПа';
+            document.querySelector('.visibility').textContent = (data.visibility / 1000).toFixed(1) + ' км';
+            
+            document.querySelector('.humidity-percent').textContent = data.main.humidity + '%';
+            document.getElementById('humidity-bar').style.width = data.main.humidity + '%';
+            
+            document.querySelector('.clouds-percent').textContent = data.clouds.all + '%';
+            document.getElementById('clouds-bar').style.width = data.clouds.all + '%';
+            
+            document.querySelector('.sunrise').textContent = formatTime(data.sys.sunrise, data.timezone);
+            document.querySelector('.sunset').textContent = formatTime(data.sys.sunset, data.timezone);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            document.querySelector('.loading').innerHTML = '<div>❌ Ошибка загрузки</div>';
         });
-
-    } catch (error) {
-        console.error('Ошибка:', error);
-        document.querySelector('.loading').innerHTML = '<div>❌ Ошибка загрузки данных</div>';
-    }
 }
 
-fetchAllWeather();
+fetchWeather();
 
 // Часы каждую минуту
 setInterval(() => {
     document.querySelector('.date-time').textContent = updateDateTime();
 }, 60000);
 
-// Автообновление погоды каждые 15 минут
-setInterval(fetchAllWeather, 15 * 60 * 1000);
+// Автообновление погоды каждые 15 минут (15 * 60 * 1000 мс)
+setInterval(fetchWeather, 15 * 60 * 1000);
 </script>
 </body>
 </html>
