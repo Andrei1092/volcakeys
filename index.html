@@ -3,1261 +3,877 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Volca Keys - 128-Step FLUX Station (Carpe Diem)</title>
+  <title>Tape Overdub Station - Lo-Fi Sound-on-Sound Sequencer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            volca: ['Oswald', 'sans-serif'],
+            sans: ['Space Grotesk', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
-            vFace: '#1a181b',
-            vChassis: '#110f13',
-            vPanel: '#242129',
-            vGold: '#c6923a',
-            vRed: '#e63946',
-            vAmber: '#f77f00',
-            vLed: '#ff2a2a',
-            vTeal: '#2ec4b6'
+            tape: {
+              chassis: '#121118',
+              panel: '#1b1824',
+              panelLight: '#262233',
+              border: '#373249',
+              gold: '#f39c12',
+              coral: '#e76f51',
+              neon: '#2ec4b6',
+              purple: '#b5838d',
+              accent: '#ffb703'
+            }
           }
         }
       }
     }
   </script>
   <style>
-    .knob-container {
-      user-select: none;
-      touch-action: none;
+    .step-active-head {
+      box-shadow: 0 0 14px #ffb703, inset 0 0 8px #ffb703;
+      border-color: #ffb703 !important;
     }
-    .knob-dial {
-      transition: transform 0.04s ease-out;
-      transform-origin: center center;
+    .led-glow-red {
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
     }
-    .tape-led-on {
-      background-color: #ff2a2a;
-      box-shadow: 0 0 10px #ff2a2a, 0 0 18px rgba(255, 42, 42, 0.75);
+    .led-glow-teal {
+      box-shadow: 0 0 12px rgba(46, 196, 182, 0.8);
     }
-    .volca-acrylic-knob {
-      background: radial-gradient(circle, rgba(255, 60, 60, 0.45) 0%, rgba(20, 16, 22, 0.95) 75%);
-      box-shadow: inset 0 0 10px rgba(255, 50, 50, 0.5), 0 0 14px rgba(255, 40, 40, 0.25);
+    .tape-wheel-spin {
+      animation: spin 3s linear infinite;
     }
-    .metal-plate {
-      background: linear-gradient(180deg, #2b2733 0%, #1c1a22 40%, #15131a 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 30px rgba(0, 0, 0, 0.85);
+    .tape-wheel-paused {
+      animation-play-state: paused;
     }
-    .clear-acrylic {
-      background: radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.4) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    .sound-pad:active {
+      transform: translateY(2px) scale(0.97);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #121118;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #373249;
+      border-radius: 4px;
     }
   </style>
 </head>
-<body class="bg-[#0b0a0e] text-neutral-200 font-mono min-h-screen p-3 sm:p-6 flex flex-col items-center select-none selection:bg-vGold selection:text-black">
+<body class="bg-tape-chassis text-neutral-200 font-sans min-h-screen p-3 sm:p-6 flex flex-col items-center selection:bg-tape-accent selection:text-black">
 
-  <main class="w-full max-w-5xl metal-plate rounded-3xl border-2 border-[#383344] p-5 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col gap-5">
-    
-    <header class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
-      <div class="flex items-center gap-3">
-        <div class="px-2.5 py-1 bg-vGold text-black font-volca font-bold text-lg tracking-widest rounded shadow">
-          VOLCA
-        </div>
-        <div>
-          <h1 class="text-lg sm:text-xl font-volca font-bold tracking-widest text-white uppercase flex items-center gap-2">
-            KEYS <span class="text-xs text-vGold font-mono font-normal">128-STEP FLUX &bull; HARMONIC ENGINE</span>
+  <header class="w-full max-w-6xl flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-tape-border">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-tape-coral via-tape-gold to-tape-neon flex items-center justify-center text-black font-mono font-black text-xl shadow-lg shadow-tape-gold/20">
+        📼
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg sm:text-xl font-black tracking-widest text-white uppercase font-mono">
+            TAPE OVERDUB STATION
           </h1>
-          <p class="text-[10px] text-neutral-400">Volca Keys (128 Ticks = 4 Такта) &bull; BOSS DD-5 &bull; BOSS RV-6 &bull; Fixed Motif / Smart Modal Arp</p>
-        </div>
-      </div>
-
-      <div class="flex items-center flex-wrap gap-2 sm:gap-3 text-xs">
-        <button id="loadPresetBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-vGold/20 hover:bg-vGold text-vGold hover:text-black border border-vGold/50 transition font-bold shadow-sm" title="Загрузить оригинальные настройки из видео carpe diem">
-          <span>🎬</span>
-          <span>ТРЕК ИЗ ВИДЕО (CARPE DIEM)</span>
-        </button>
-
-        <button id="arpModeBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vTeal/60 text-vTeal hover:bg-vTeal/20 transition font-bold" title="Переключить режим арпеджио">
-          <span class="w-2 h-2 rounded-full bg-vTeal"></span>
-          <span id="arpModeText">АРП: СЛЕДОВАТЬ ЗА АККОРДОМ</span>
-        </button>
-
-        <button id="fluxToggleBtn" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-black/60 border border-vRed/60 text-vRed hover:bg-vRed/10 transition font-bold">
-          <span id="fluxLed" class="w-2.5 h-2.5 rounded-full tape-led-on"></span>
-          <span>FLUX: 128 TICKS</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- 4 Ticks / Chords Progression Section -->
-    <div class="bg-black/60 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
-      <div class="flex flex-wrap items-center justify-between text-xs gap-2">
-        <span class="text-neutral-300 font-bold flex items-center gap-2">
-          <span class="text-vGold">🎼</span> 4 ТАКТА ГАРМОНИИ (ПО 1 ТАКТУ / 32 ТИКА НА АККОРД)
-        </span>
-        
-        <div class="flex items-center gap-1.5 text-[11px]">
-          <span class="text-neutral-400">Пресеты:</span>
-          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Dm,Bb,F,C">Dm-Bb-F-C</button>
-          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Am,F,C,G">Am-F-C-G</button>
-          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Em,C,G,D">Em-C-G-D</button>
-          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Cm,Ab,Eb,Bb">Cm-Ab-Eb-Bb</button>
-        </div>
-
-        <span id="currentChordPhaseText" class="text-vGold font-bold font-mono">ТАКТ 1 / 4: D MINOR</span>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <!-- Chord 1 Card -->
-        <div id="chord-card-0" class="chord-box p-3 rounded-xl border-2 border-vGold bg-vGold/20 shadow-md shadow-vGold/25 ring-1 ring-vGold/60 opacity-100 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
-          <div class="flex items-center justify-between w-full">
-            <span class="text-[11px] font-volca font-bold text-vGold tracking-wider">ТАКТ 1 (АККОРД 1)</span>
-            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 001-032</span>
-          </div>
-          <div class="flex items-center gap-1.5 w-full my-1.5">
-            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="0">
-              <option value="C">C</option><option value="C#">C#</option><option value="D" selected>D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
-            </select>
-            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="0">
-              <option value="m" selected>m (min)</option><option value="M">M (maj)</option>
-            </select>
-          </div>
-          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
-            <span id="chord-name-0" class="font-bold text-white text-[11px]">Dm</span>
-            <span id="chord-notes-0">D2 + F3 + A3</span>
-          </div>
-          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
-            <span class="text-neutral-500">АРП:</span>
-            <span id="chord-arp-0" class="font-bold">D4 F4 A4 D5 F5</span>
-          </div>
-        </div>
-
-        <!-- Chord 2 Card -->
-        <div id="chord-card-1" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
-          <div class="flex items-center justify-between w-full">
-            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 2 (АККОРД 2)</span>
-            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 033-064</span>
-          </div>
-          <div class="flex items-center gap-1.5 w-full my-1.5">
-            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="1">
-              <option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb" selected>Bb</option><option value="B">B</option>
-            </select>
-            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="1">
-              <option value="m">m (min)</option><option value="M" selected>M (maj)</option>
-            </select>
-          </div>
-          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
-            <span id="chord-name-1" class="font-bold text-white text-[11px]">Bb</span>
-            <span id="chord-notes-1">Bb1 + D3 + F3</span>
-          </div>
-          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
-            <span class="text-neutral-500">АРП:</span>
-            <span id="chord-arp-1" class="font-bold">Bb4 D5 F5 Bb5 D6</span>
-          </div>
-        </div>
-
-        <!-- Chord 3 Card -->
-        <div id="chord-card-2" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
-          <div class="flex items-center justify-between w-full">
-            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 3 (АККОРД 3)</span>
-            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 065-096</span>
-          </div>
-          <div class="flex items-center gap-1.5 w-full my-1.5">
-            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="2">
-              <option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F" selected>F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
-            </select>
-            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="2">
-              <option value="m">m (min)</option><option value="M" selected>M (maj)</option>
-            </select>
-          </div>
-          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
-            <span id="chord-name-2" class="font-bold text-white text-[11px]">F</span>
-            <span id="chord-notes-2">F2 + A3 + C4</span>
-          </div>
-          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
-            <span class="text-neutral-500">АРП:</span>
-            <span id="chord-arp-2" class="font-bold">F4 A4 C5 F5 A5</span>
-          </div>
-        </div>
-
-        <!-- Chord 4 Card -->
-        <div id="chord-card-3" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
-          <div class="flex items-center justify-between w-full">
-            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 4 (АККОРД 4)</span>
-            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 097-128</span>
-          </div>
-          <div class="flex items-center gap-1.5 w-full my-1.5">
-            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="3">
-              <option value="C" selected>C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
-            </select>
-            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="3">
-              <option value="m">m (min)</option><option value="M" selected>M (maj)</option>
-            </select>
-          </div>
-          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
-            <span id="chord-name-3" class="font-bold text-white text-[11px]">C</span>
-            <span id="chord-notes-3">C2 + E3 + G3</span>
-          </div>
-          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
-            <span class="text-neutral-500">АРП:</span>
-            <span id="chord-arp-3" class="font-bold">C4 E4 G4 C5 E5</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Interactive Arp Motif & Accent Pattern Editors -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      
-      <!-- Arp Motif Editor (5 Steps) -->
-      <div class="bg-black/60 border border-vTeal/30 rounded-2xl p-4 flex flex-col gap-3">
-        <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
-          <span class="font-bold text-vTeal flex items-center gap-1.5">
-            <span>🎹</span> РЕДАКТОР СТУПЕНЕЙ АРПЕДЖИО (5 ШАГОВ)
+          <span class="text-[10px] bg-red-950/80 border border-red-500/50 text-red-400 font-mono px-2 py-0.5 rounded uppercase font-bold tracking-wider">
+            Sound-on-Sound
           </span>
-          <div class="flex items-center gap-1">
-            <button id="arpPresetCarpe" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Carpe Diem (1-3-5-7-9)</button>
-            <button id="arpPresetMaj9" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Upper Triad (3-5-7-9-8)</button>
-            <button id="arpPresetAsc" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Ascending (1-3-5-8-10)</button>
-          </div>
         </div>
-
-        <div class="grid grid-cols-5 gap-2" id="arpEditorsContainer">
-          <!-- Populated via JS -->
-        </div>
-        <span class="text-[10px] text-neutral-400">Ступени автоматически адаптируются под лад аккорда (мажор / минор), избегая диссонансов.</span>
+        <p class="text-xs text-neutral-400 font-mono">16-Step Lo-Fi Tape Loop Sequencer with Layer Overdub</p>
       </div>
-
-      <!-- Accent Pattern Editor (8 Steps) -->
-      <div class="bg-black/60 border border-vRed/30 rounded-2xl p-4 flex flex-col gap-3">
-        <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
-          <span class="font-bold text-vRed flex items-center gap-1.5">
-            <span>✨</span> РЕДАКТОР АКЦЕНТОВ (8 ШАГОВ --xx----)
-          </span>
-          <div class="flex items-center gap-1">
-            <button id="accentPresetSync" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Syncopated</button>
-            <button id="accentPresetEvery" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Offbeat</button>
-            <button id="accentPresetOff" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Mute</button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-8 gap-1.5" id="accentEditorsContainer">
-          <!-- Populated via JS -->
-        </div>
-        <span class="text-[10px] text-neutral-400">Хрустальные колокольчики берут устойчивые консонансные обертоны текущего аккорда.</span>
-      </div>
-
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-      
-      <!-- 128-Tick Radar & Transport Screen (5 Cols) -->
-      <div class="lg:col-span-5 clear-acrylic rounded-2xl p-4 flex flex-col items-center justify-center relative">
-        <div class="w-full flex items-center justify-between text-[11px] text-neutral-400 mb-2">
-          <span>РАДАР 128 ТИКОВ ($25 \times 5 + 3$)</span>
-          <span id="currentTickDisplay" class="text-vGold font-bold font-mono">TICK: 000 / 128</span>
-        </div>
-
-        <div class="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
-          <canvas id="radarCanvas" class="w-full h-full block"></canvas>
-          <div class="absolute flex flex-col items-center pointer-events-none">
-            <span id="chordRootDisp" class="text-xl sm:text-2xl font-volca font-bold text-white tracking-widest">D MINOR</span>
-            <span id="phaseLagDisp" class="text-[10px] text-vAmber font-bold mt-0.5">СДВИГ: +3 ТИКА/ЦИКЛ</span>
-            <span class="text-[9px] text-neutral-500 uppercase mt-1">128 &divide; 5 = 25 (ост. 3)</span>
-          </div>
-        </div>
-
-        <div class="w-full flex flex-col gap-1 mt-3">
-          <div class="flex justify-between text-[9px] text-neutral-500 uppercase px-0.5">
-            <span>Такт 1</span>
-            <span>Такт 2</span>
-            <span>Такт 3</span>
-            <span>Такт 4</span>
-          </div>
-          <div class="w-full grid grid-cols-16 gap-1" id="beatLedsContainer"></div>
-        </div>
+    <!-- Master Controls & MIDI Export -->
+    <div class="flex items-center flex-wrap gap-3 text-xs font-mono">
+      <div class="flex items-center gap-2 bg-tape-panel border border-tape-border px-3 py-1.5 rounded-xl">
+        <span class="text-tape-gold">🔊 МАСТЕР:</span>
+        <input type="range" id="masterVolume" min="0" max="1" step="0.02" value="0.85" class="w-20 sm:w-28 cursor-pointer accent-tape-accent">
+        <span id="masterVolDisp" class="text-white font-bold w-8 text-right">85%</span>
       </div>
 
-      <!-- Rotary Knobs & Mixer (7 Cols) -->
-      <div class="lg:col-span-7 flex flex-col gap-4">
+      <button id="exportMidiBtn" class="flex items-center gap-1.5 bg-tape-gold/20 hover:bg-tape-gold text-tape-gold hover:text-black border border-tape-gold/40 px-3 py-1.5 rounded-xl font-bold transition">
+        <span>💾</span>
+        <span>СКАЧАТЬ .MID</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+    
+    <!-- LEFT & CENTER: Cassette Reel, Sequencer Matrix & Keys (8 Cols) -->
+    <div class="lg:col-span-8 flex flex-col gap-5">
+      
+      <!-- Cassette & Transport Deck -->
+      <div class="bg-tape-panel border border-tape-border rounded-2xl p-5 shadow-2xl relative overflow-hidden">
         
-        <!-- Big VCF Filter & Sound Section -->
-        <div class="bg-black/50 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg">
-          <div class="flex items-center justify-between border-b border-white/10 pb-2 mb-4">
-            <span class="text-xs font-bold text-vGold tracking-wider flex items-center gap-1.5">
-              <span>🎛️</span> АНАЛОГОВЫЙ VCF ФИЛЬТР (ГЛАВНАЯ РУЧКА ИЗ ВИДЕО)
-            </span>
-            <span class="text-[10px] text-neutral-400">Тяните вверх для раскрытия 5-нотного арпеджио</span>
+        <!-- Deck Header Status -->
+        <div class="flex flex-wrap items-center justify-between pb-3 border-b border-tape-border/60 gap-3 text-xs font-mono">
+          <div class="flex items-center gap-2.5">
+            <span id="recStatusLed" class="w-3 h-3 rounded-full bg-neutral-600 transition-colors"></span>
+            <span id="deckStatusText" class="font-bold tracking-wider text-neutral-400">READY</span>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center justify-items-center">
-            
-            <!-- Knob 1: BIG CUTOFF -->
-            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="cutoff" data-min="100" data-max="9000" data-val="180">
-              <div class="relative w-20 h-20 sm:w-22 sm:h-22 rounded-full volca-acrylic-knob border-2 border-vGold p-1 flex items-center justify-center shadow-lg shadow-red-600/30">
-                <div class="knob-dial w-full h-full rounded-full border border-neutral-600 relative flex items-center justify-center">
-                  <div class="absolute top-1.5 w-1.5 h-4 bg-vGold rounded-full shadow-sm"></div>
-                  <div class="w-8 h-8 rounded-full bg-[#121015] border border-neutral-700 flex items-center justify-center">
-                    <span class="text-[9px] text-vGold font-bold">VCF</span>
-                  </div>
-                </div>
-              </div>
-              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">CUTOFF</span>
-              <span class="text-[10px] text-vGold font-bold knob-val-text">180 Hz</span>
-            </div>
-
-            <!-- Knob 2: PEAK (Resonance) -->
-            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="peak" data-min="0.5" data-max="16" data-val="5.5">
-              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
-                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center">
-                  <div class="absolute top-1.5 w-1 h-3.5 bg-vRed rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">PEAK (RES)</span>
-              <span class="text-[10px] text-vRed font-bold knob-val-text">5.5</span>
-            </div>
-
-            <!-- Knob 3: BOSS DD-5 DELAY TIME -->
-            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="delayTime" data-min="0.08" data-max="0.8" data-val="0.32">
-              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
-                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center">
-                  <div class="absolute top-1.5 w-1 h-3.5 bg-vAmber rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">DD-5 TIME</span>
-              <span class="text-[10px] text-vAmber font-bold knob-val-text">320 ms</span>
-            </div>
-
-            <!-- Knob 4: BOSS DD-5 FEEDBACK -->
-            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="delayFeedback" data-min="0" data-max="0.88" data-val="0.58">
-              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
-                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center">
-                  <div class="absolute top-1.5 w-1 h-3.5 bg-vAmber rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">DD-5 F.BACK</span>
-              <span class="text-[10px] text-vAmber font-bold knob-val-text">58%</span>
-            </div>
-
+          <!-- Active Layer Indicator -->
+          <div class="flex items-center gap-3">
+            <span class="text-neutral-400">АКТИВНЫЙ СЛОЙ:</span>
+            <span id="activeLayerPill" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-tape-neon/20 text-tape-neon border border-tape-neon/40">
+              Слой 1 (Бас 16')
+            </span>
           </div>
         </div>
 
-        <!-- Secondary Knobs Row -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          
-          <!-- BOSS RV-6 Reverb Space -->
-          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="space" data-min="0" data-max="1" data-val="0.65">
-            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">RV-6 REVERB</span>
-            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
-              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                <div class="absolute top-1 w-1 h-2.5 bg-vTeal rounded-full"></div>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-5 my-4">
+          <!-- Tape Cassette Body -->
+          <div class="w-full sm:w-64 h-28 bg-black/60 rounded-xl border-2 border-tape-border p-3 flex items-center justify-between relative shadow-inner">
+            <!-- Left Reel -->
+            <div class="w-16 h-16 rounded-full border-4 border-tape-panel bg-neutral-900 flex items-center justify-center">
+              <div id="spoolL" class="tape-wheel-spin tape-wheel-paused w-12 h-12 rounded-full border-2 border-dashed border-tape-accent flex items-center justify-center">
+                <div class="w-4 h-4 rounded-full bg-neutral-700"></div>
               </div>
             </div>
-            <span class="text-xs font-bold text-vTeal mt-1.5 knob-val-text">65%</span>
-          </div>
 
-          <!-- Chord Sustain / Warmth -->
-          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="chordSustain" data-min="0.2" data-max="1" data-val="0.85">
-            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">СУСТЕЙН АККОРДОВ</span>
-            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
-              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                <div class="absolute top-1 w-1 h-2.5 bg-vGold rounded-full"></div>
+            <!-- Tape Window -->
+            <div class="flex flex-col items-center justify-center">
+              <div class="w-20 h-8 bg-neutral-950 rounded border border-neutral-700 flex items-center justify-center">
+                <span id="counterDisp" class="font-mono text-sm text-tape-neon font-bold tracking-widest">LOOP 01</span>
+              </div>
+              <span class="text-[9px] font-mono text-neutral-500 mt-1 uppercase tracking-wider">Sound on Sound</span>
+            </div>
+
+            <!-- Right Reel -->
+            <div class="w-16 h-16 rounded-full border-4 border-tape-panel bg-neutral-900 flex items-center justify-center">
+              <div id="spoolR" class="tape-wheel-spin tape-wheel-paused w-12 h-12 rounded-full border-2 border-dashed border-tape-accent flex items-center justify-center">
+                <div class="w-4 h-4 rounded-full bg-neutral-700"></div>
               </div>
             </div>
-            <span class="text-xs font-bold text-vGold mt-1.5 knob-val-text">85%</span>
           </div>
 
-          <!-- LFO Rate -->
-          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="lfoRate" data-min="0.1" data-max="8" data-val="1.2">
-            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">LFO RATE</span>
-            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
-              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                <div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div>
-              </div>
-            </div>
-            <span class="text-xs font-bold text-white mt-1.5 knob-val-text">1.2 Hz</span>
-          </div>
+          <!-- Transport Buttons -->
+          <div class="flex flex-wrap items-center gap-2.5 sm:justify-end w-full">
+            <!-- Play / Pause -->
+            <button id="playBtn" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-tape-gold to-tape-coral text-black font-mono font-bold text-xs tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition">
+              <span id="playIcon">▶</span>
+              <span id="playText">PLAY</span>
+            </button>
 
-          <!-- BPM (Musical Range: 45 to 110 BPM) -->
-          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="bpm" data-min="45" data-max="110" data-val="68">
-            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">TEMPO (BPM)</span>
-            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
-              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                <div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div>
-              </div>
-            </div>
-            <span class="text-xs font-bold text-white mt-1.5 knob-val-text">68 BPM</span>
-          </div>
+            <!-- Stop -->
+            <button id="stopBtn" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono font-semibold text-xs active:scale-95 transition">
+              <span>■</span>
+              <span>STOP</span>
+            </button>
 
+            <!-- Rewind to Step 1 -->
+            <button id="rewindBtn" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-tape-gold/15 hover:bg-tape-gold/25 border border-tape-gold/40 text-tape-gold hover:text-white font-mono font-bold text-xs active:scale-95 transition shadow-sm" title="Перемотать петлю ровно на Шаг 1">
+              <span>⏮</span>
+              <span>ШАГ 1</span>
+            </button>
+
+            <!-- OVERDUB RECORD BUTTON -->
+            <button id="overdubBtn" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-950 border-2 border-red-500 text-red-400 hover:text-white hover:bg-red-900 font-mono font-black text-xs tracking-wider active:scale-95 transition shadow-lg" title="Включить наложение нот на лету">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+              <span id="overdubText">RECORD</span>
+            </button>
+
+            <!-- Clear All Loop -->
+            <button id="clearAllBtn" class="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-300 border border-white/10 font-mono text-xs text-neutral-400 transition" title="Очистить весь секвенсор">
+              СБРОС ЛУПА
+            </button>
+          </div>
         </div>
 
-        <!-- 4-Channel Analog Level Mixer -->
-        <div class="bg-black/50 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
-          <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
-            <span class="font-bold text-white flex items-center gap-1.5">
-              <span>🎚️</span> АНАЛОГОВЫЙ МИКШЕР УРОВНЕЙ (БАЛАНС СЛОЕВ)
+        <div class="mt-4 pt-3 border-t border-tape-border/60">
+          <div class="flex items-center justify-between text-xs font-mono text-neutral-400 mb-2">
+            <span class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-tape-accent"></span>
+              16-ШАГОВЫЙ БЕГУЩИЙ СЕКВЕНСОР (1 ТАКТ 4/4):
             </span>
-            <span class="text-[10px] text-neutral-400">Раздельный баланс громкостей всех слоев</span>
+            <span id="currentStepDisplay" class="text-tape-gold font-bold">ШАГ: 01 / 16</span>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-center">
-            <!-- Bass Level -->
-            <div class="bg-black/40 border border-vTeal/30 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="bassVol" data-min="0" data-max="1" data-val="0.30">
-              <span class="text-[10px] text-vTeal font-bold uppercase mb-1">ГРОМК. 1 (БАС)</span>
-              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-vTeal/60 flex items-center justify-center">
-                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                  <div class="absolute top-1 w-1 h-2.5 bg-vTeal rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-vTeal mt-1 knob-val-text">30%</span>
-            </div>
+          <!-- 16 Step Buttons Strip -->
+          <div class="grid grid-cols-8 sm:grid-cols-16 gap-1.5" id="stepStrip">
+            <!-- Generated dynamically via JS: steps 0 to 15 -->
+          </div>
+        </div>
+      </div>
 
-            <!-- Arp Level -->
-            <div class="bg-black/40 border border-vGold/30 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="arpVol" data-min="0" data-max="1" data-val="0.75">
-              <span class="text-[10px] text-vGold font-bold uppercase mb-1">ГРОМК. 2 (АРП)</span>
-              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-vGold/60 flex items-center justify-center">
-                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                  <div class="absolute top-1 w-1 h-2.5 bg-vGold rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-vGold mt-1 knob-val-text">75%</span>
-            </div>
+      <div class="bg-tape-panel border border-tape-border rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between border-b border-tape-border pb-3 mb-4 gap-3">
+          <div>
+            <h2 class="text-sm font-bold font-mono tracking-wider text-white uppercase flex items-center gap-2">
+              <span>🎛️</span> СЕЛЕКТОР ОКТАВ (FOOTAGE) & СЛОИ НАЛОЖЕНИЯ
+            </h2>
+            <p class="text-xs text-neutral-400 font-mono">Переключайте регистры прямо во время записи (Overdub) как на аналоговом синтезаторе</p>
+          </div>
 
-            <!-- Accent Level -->
-            <div class="bg-black/40 border border-vRed/30 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="accentVol" data-min="0" data-max="1" data-val="0.60">
-              <span class="text-[10px] text-vRed font-bold uppercase mb-1">ГРОМК. 3 (АКЦЕНТ)</span>
-              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-vRed/60 flex items-center justify-center">
-                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                  <div class="absolute top-1 w-1 h-2.5 bg-vRed rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-vRed mt-1 knob-val-text">60%</span>
-            </div>
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <button id="undoLayerBtn" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-tape-coral/20 hover:text-tape-coral border border-white/10 text-neutral-300 transition" title="Стереть последний записанный слой">
+              ↺ ОТМЕНА СЛОЯ
+            </button>
+          </div>
+        </div>
 
-            <!-- Master Volume -->
-            <div class="bg-black/40 border border-white/20 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="masterVol" data-min="0" data-max="1" data-val="0.80">
-              <span class="text-[10px] text-white font-bold uppercase mb-1">MASTER VOLUME</span>
-              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-400 flex items-center justify-center">
-                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
-                  <div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-white mt-1 knob-val-text">80%</span>
+        <!-- 3-Footage Big Selector Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <!-- Foot 1: 32' / 16' (Bass Foundation) -->
+          <button class="footage-btn p-3.5 rounded-xl border-2 border-tape-neon bg-tape-neon/10 text-left transition flex flex-col justify-between group" data-layer="bass" data-octave="16">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono font-bold text-tape-neon group-hover:scale-105 transition">СЛОЙ 1: БАС</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-tape-neon/20 text-tape-neon font-black">16' / 32'</span>
             </div>
+            <p class="text-[11px] text-neutral-400">Глубокий суб-бас. Играйте по 1 ноте на каждую четверть (шаги 1, 5, 9, 13).</p>
+            <div class="mt-2 flex items-center justify-between text-[10px] font-mono text-tape-neon">
+              <span>ПРИМЕР: A1 - D1 - E1 - A1</span>
+              <span class="layer-note-count font-bold">0 нот</span>
+            </div>
+          </button>
+
+          <!-- Foot 2: 8' / 4' (Arpeggio Body) -->
+          <button class="footage-btn p-3.5 rounded-xl border border-tape-border bg-black/40 text-left transition flex flex-col justify-between group opacity-85 hover:opacity-100" data-layer="arp" data-octave="8">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono font-bold text-tape-gold group-hover:scale-105 transition">СЛОЙ 2: АРПЕДЖИО</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-tape-gold/20 text-tape-gold font-black">8' / 4'</span>
+            </div>
+            <p class="text-[11px] text-neutral-400">Теплый средний регистр. На следующем круге набейте перебор из 5 нот.</p>
+            <div class="mt-2 flex items-center justify-between text-[10px] font-mono text-tape-gold">
+              <span>ПОЛИМЕТРИЯ: 5 НОТ</span>
+              <span class="layer-note-count font-bold">0 нот</span>
+            </div>
+          </button>
+
+          <!-- Foot 3: 2' / 1' (Staccato Accents) -->
+          <button class="footage-btn p-3.5 rounded-xl border border-tape-border bg-black/40 text-left transition flex flex-col justify-between group opacity-85 hover:opacity-100" data-layer="high" data-octave="2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-mono font-bold text-tape-purple group-hover:scale-105 transition">СЛОЙ 3: АКЦЕНТЫ</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-tape-purple/20 text-tape-purple font-black">2' / 1'</span>
+            </div>
+            <p class="text-[11px] text-neutral-400">Высокие кристаллы и колокольчики на слабых синкопированных долях.</p>
+            <div class="mt-2 flex items-center justify-between text-[10px] font-mono text-tape-purple">
+              <span>СТАККАТО ХРУСТАЛЬ</span>
+              <span class="layer-note-count font-bold">0 нот</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="bg-black/50 p-4 rounded-xl border border-tape-border">
+          <div class="flex items-center justify-between text-xs font-mono text-neutral-400 mb-3">
+            <span>КЛАВИШИ ДЛЯ ИГРЫ И ЗАПИСИ (Клавиши 1-8 на клавиатуре):</span>
+            <span class="text-tape-gold font-bold" id="scaleNameDisp">Лад: A Minor Pentatonic</span>
+          </div>
+
+          <!-- Sound Pads Grid (1 to 8) -->
+          <div class="grid grid-cols-4 sm:grid-cols-8 gap-2" id="padsContainer">
+            <!-- Populated via JS -->
           </div>
         </div>
 
       </div>
+
+      <!-- Real-Time Multi-Layer Matrix Visualizer -->
+      <div class="bg-tape-panel border border-tape-border rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between mb-3 text-xs font-mono text-neutral-400 gap-2">
+          <span class="font-bold text-white uppercase flex items-center gap-1.5">
+            <span>📊</span> РЕДАКТОР ПЕТЛИ (ИНТЕРАКТИВНАЯ МАТРИЦА СЛОЕВ)
+          </span>
+          <div class="flex items-center gap-3 text-[11px]">
+            <span class="text-neutral-400 hidden sm:inline">🖱️ ЛКМ: Добавить/Удалить • Тянуть: Двигать • ПКМ: Удалить</span>
+            <span class="px-2 py-0.5 rounded bg-tape-neon/15 text-tape-neon border border-tape-neon/30">СЕТКА: 1/16</span>
+          </div>
+        </div>
+        <div class="h-56 sm:h-64 w-full bg-[#0d0c14] rounded-xl border border-tape-border overflow-hidden relative select-none">
+          <canvas id="matrixCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Transport & Mute Buttons -->
-    <div class="border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="lg:col-span-4 flex flex-col gap-5">
       
-      <div class="flex flex-wrap items-center gap-2 text-xs">
-        <button id="muteBassBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vTeal bg-vTeal/15 text-vTeal font-bold transition">
-          <span class="w-2 h-2 rounded-full bg-vTeal"></span>
-          <span>1: БАС И АККОРДЫ (4 ТАКТА)</span>
-        </button>
+      <!-- Groove & Rhythm Engine -->
+      <div class="bg-tape-panel border border-tape-border rounded-2xl p-5 shadow-xl font-mono text-xs">
+        <div class="flex items-center justify-between border-b border-tape-border pb-3 mb-4">
+          <h2 class="font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <span>🥁</span> РИТМ И СВИНГ
+          </h2>
+          <span class="text-[10px] text-tape-gold">TAPE DRUMS</span>
+        </div>
 
-        <button id="muteArpBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vGold bg-vGold/15 text-vGold font-bold transition">
-          <span class="w-2 h-2 rounded-full bg-vGold"></span>
-          <span>2: АРПЕДЖИО (5 НОТ)</span>
-        </button>
+        <div class="space-y-4">
+          <!-- BPM -->
+          <div>
+            <div class="flex justify-between text-neutral-400 mb-1">
+              <span>ТЕМП (BPM):</span>
+              <span id="bpmVal" class="text-white font-bold">78</span>
+            </div>
+            <input type="range" id="bpmSlider" min="60" max="96" value="78" class="w-full accent-tape-gold cursor-pointer">
+          </div>
 
-        <button id="muteAccentBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vRed bg-vRed/15 text-vRed font-bold transition">
-          <span class="w-2 h-2 rounded-full bg-vRed"></span>
-          <span>3: АКЦЕНТЫ</span>
-        </button>
+          <!-- Swing -->
+          <div>
+            <div class="flex justify-between text-neutral-400 mb-1">
+              <span>СВИНГ (GROOVE):</span>
+              <span id="swingVal" class="text-white font-bold">30%</span>
+            </div>
+            <input type="range" id="swingSlider" min="0" max="60" value="30" class="w-full accent-tape-gold cursor-pointer">
+          </div>
+
+          <!-- Drum Pattern Selector -->
+          <div>
+            <span class="text-neutral-400 block mb-1.5">РИСУНОК УДАРНЫХ:</span>
+            <select id="drumPatternSelect" class="w-full bg-black/60 border border-tape-border text-white rounded-lg p-2 focus:outline-none focus:border-tape-gold">
+              <option value="boombap" selected>Classic 90s Boom-Bap (Kick on 1 & 7)</option>
+              <option value="chillslow">Lazy Slow Beat (Kick on 1 & 11)</option>
+              <option value="minimal">Minimal Hi-Hat & Snare Only</option>
+              <option value="mute">MUTE DRUMS (Только ваш овердаб)</option>
+            </select>
+          </div>
+
+          <!-- Drum Volume -->
+          <div>
+            <div class="flex justify-between text-neutral-400 mb-1">
+              <span>ГРОМКОСТЬ БАРАБАНОВ:</span>
+              <span id="drumVolDisp" class="text-tape-gold font-bold">75%</span>
+            </div>
+            <input type="range" id="drumVolSlider" min="0" max="1" step="0.02" value="0.75" class="w-full accent-tape-gold cursor-pointer">
+          </div>
+        </div>
+
+        <div class="border-t border-tape-border/80 mt-5 pt-4">
+          <h3 class="font-bold text-white uppercase tracking-wider flex items-center gap-1.5 mb-3 text-tape-coral">
+            <span>📼</span> КАССЕТНЫЙ МАСТЕРИНГ
+          </h3>
+
+          <div class="space-y-3">
+            <!-- Tape Wow / Flutter -->
+            <div>
+              <div class="flex justify-between text-neutral-400 mb-1">
+                <span>Wow & Flutter (Питч-плавание):</span>
+                <span id="wobbleVal" class="text-tape-gold font-bold">35%</span>
+              </div>
+              <input type="range" id="wobbleSlider" min="0" max="1" step="0.02" value="0.35" class="w-full accent-tape-gold cursor-pointer">
+            </div>
+
+            <!-- Tape Warm Filter Cutoff -->
+            <div>
+              <div class="flex justify-between text-neutral-400 mb-1">
+                <span>Срез фильтра (Теплота):</span>
+                <span id="filterVal" class="text-tape-gold font-bold">3600 Hz</span>
+              </div>
+              <input type="range" id="filterSlider" min="1200" max="10000" step="100" value="3600" class="w-full accent-tape-gold cursor-pointer">
+            </div>
+
+            <!-- Vinyl & Rain Ambience -->
+            <div>
+              <div class="flex justify-between text-neutral-400 mb-1">
+                <span>Шум дождя и винила:</span>
+                <span id="ambienceVal" class="text-tape-gold font-bold">40%</span>
+              </div>
+              <input type="range" id="ambienceSlider" min="0" max="1" step="0.02" value="0.40" class="w-full accent-tape-gold cursor-pointer">
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="flex items-center gap-3">
-        <button id="playBtn" class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-vGold to-vAmber text-black font-volca font-bold text-sm tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition">
-          <span id="playIcon">▶</span>
-          <span id="playText">PLAY FLUX LOOP</span>
-        </button>
-
-        <button id="stopBtn" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs active:scale-95 transition">
-          ■ STOP
-        </button>
+      <!-- Quick How-To Instructions -->
+      <div class="bg-black/40 border border-tape-border rounded-2xl p-4 font-mono text-xs text-neutral-400 leading-relaxed">
+        <h4 class="text-white font-bold mb-2 flex items-center gap-1.5">
+          <span>💡</span> Рецепт записи овердаба:
+        </h4>
+        <ol class="list-decimal list-inside space-y-1.5">
+          <li>Нажмите <b class="text-tape-gold">PLAY</b> и затем <b class="text-red-400">[● RECORD]</b>.</li>
+          <li><b>Слой 1 (16'):</b> Нажмите клавиши <b class="text-white">1, 4, 3, 1</b> по одной на каждый удар метронома (четверти).</li>
+          <li><b>Слой 2 (8'):</b> На ходу переключите селектор на <b>СЛОЙ 2</b> и сыграйте перебор из 5 нот.</li>
+          <li><b>Слой 3 (2'):</b> Переключите на <b>СЛОЙ 3</b> и набейте синкопированные акценты-колокольчики!</li>
+        </ol>
       </div>
+
     </div>
-
   </main>
 
   <script>
   (function() {
     'use strict';
 
+    // --- State & Settings ---
     const STATE = {
       isPlaying: false,
-      currentTick128: 0,
-      bpm: 68,
+      isRecording: false,
+      bpm: 78,
+      swing: 0.30,
+      currentStep: 0,
+      loopCount: 1,
+      masterVolume: 0.85,
+      drumVolume: 0.75,
+      ambienceVolume: 0.40,
+      drumPattern: 'boombap',
+      activeLayer: 'bass', // 'bass', 'arp', 'high'
+      activeOctave: 16,
+      activePadIndex: 0,
+      tapeWobble: 0.35,
+      filterCutoff: 3600,
       
-      cutoff: 180,
-      peak: 5.5,
-      delayTime: 0.32,
-      delayFeedback: 0.58,
-      spaceAmount: 0.65,
-      chordSustain: 0.85,
-      lfoRate: 1.2,
+      // The 16-step sequence memory: array of 16 steps
+      // Each step holds an array of note events: { midi, layer, noteName, length }
+      sequence: Array.from({ length: 16 }, () => []),
+      
+      // History of layers for Undo functionality
+      historyStack: [],
 
-      masterVol: 0.80,
-      bassVol: 0.30,
-      arpVol: 0.75,
-      accentVol: 0.60,
-
-      bassActive: true,
-      arpActive: true,
-      accentActive: true,
-
-      arpFollowMode: true,
-
-      bassChords: [
-        { name: "D MINOR",  rootMidi: 38, triad: [50, 53, 57], root: "D",  quality: "m" },
-        { name: "Bb MAJOR", rootMidi: 34, triad: [46, 50, 53], root: "Bb", quality: "M" },
-        { name: "F MAJOR",  rootMidi: 41, triad: [41, 48, 53], root: "F",  quality: "M" },
-        { name: "C MAJOR",  rootMidi: 36, triad: [48, 52, 55], root: "C",  quality: "M" }
-      ],
-
-      // Базовые ступени арпеджио заменены на Ascending (1-3-5-8-10) по умолчанию
-      customArpIntervals: [0, 3, 7, 12, 15],
-
-      arpStepTickInterval: 2,
-      arpIndex: 0,
-
-      accentMask: [0, 0, 1, 1, 0, 0, 0, 0]
+      // Drag & Mouse Editing State
+      dragState: null,
+      hoverInfo: null
     };
 
-    const ROOT_MIDI_MAP = {
-      'C': 36, 'C#': 37, 'D': 38, 'Eb': 39,
-      'E': 40, 'F': 41, 'F#': 42, 'G': 43,
-      'Ab': 44, 'A': 45, 'Bb': 34, 'B': 35
+    // Minor Pentatonic scale in A (A, C, D, E, G) mapped across octaves
+    const SCALES = {
+      16: [33, 36, 38, 40, 43, 45, 48, 50], // A1 to D3 (Bass)
+      8:  [57, 60, 62, 64, 67, 69, 72, 74], // A3 to D5 (Warm poly arps)
+      2:  [81, 84, 86, 88, 91, 93, 96, 98]  // A5 to D7 (Chimes & bells)
     };
 
-    const NOTE_NAMES_ARR = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-
-    function midiToNoteName(m) {
+    const NOTE_NAMES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+    function midiToName(m) {
+      const name = NOTE_NAMES[m % 12];
       const oct = Math.floor(m / 12) - 1;
-      return `${NOTE_NAMES_ARR[m % 12]}${oct}`;
+      return `${name}${oct}`;
     }
 
     function mtof(m) {
       return 440 * Math.pow(2, (m - 69) / 12);
     }
 
-    // Гармонически выверенный расчет нот арпеджио
-    function computeHarmonicArpMotif(rootMidi, quality) {
-      // Режим 1: Фиксированный гипнотический мотив из видео Carpe Diem
-      // Вращается в D-minor (D4, F4, A4, C5, E5) поверх любой басовой линии
-      if (!STATE.arpFollowMode) {
-        const dBase = 62; // D4
-        return [dBase, dBase + 3, dBase + 7, dBase + 10, dBase + 14];
-      }
-
-      // Режим 2: Следование за аккордом с автоматической адаптацией ступеней к ладу (Мажор / Минор)
-      let root = rootMidi;
-      while (root < 60) root += 12;
-      while (root > 71) root -= 12;
-
-      const isMinor = quality === 'm';
-      const third = isMinor ? 3 : 4;       // m3 или M3
-      const seventh = isMinor ? 10 : 11;   // m7 или M7
-      const tenth = isMinor ? 15 : 16;     // октава + терция
-
-      return STATE.customArpIntervals.map(degree => {
-        let offset = degree;
-        if (degree === 3 || degree === 4) offset = third;
-        else if (degree === 10 || degree === 11) offset = seventh;
-        else if (degree === 15 || degree === 16) offset = tenth;
-        return root + offset;
-      });
-    }
-
-    // Чистые консонансные колокольчики для акцентов (тоника, терция или квинта аккорда в 5-6 октавах)
-    function computeHarmonicAccentNote(chord) {
-      let root = chord.rootMidi;
-      while (root < 72) root += 12;
-      const third = chord.quality === 'm' ? 3 : 4;
-      const validTones = [root, root + third, root + 7, root + 12, root + 12 + third];
-      return validTones[Math.floor(Math.random() * validTones.length)];
-    }
-
+    // --- Web Audio Graph Variables ---
     let actx = null;
-    let masterMuteGain = null;
     let masterGain = null;
-    let vcfFilter = null;
-    let lfoOsc = null;
-    let lfoGain = null;
+    let masterMuteGain = null;
+    let masterFilter = null;
+    let masterCompressor = null;
+    let tapeDelay = null;
+    let tapeDelayGain = null;
+    let wobbleOsc = null;
+    let wobbleGain = null;
+    let drumGain = null;
+    let ambienceGain = null;
+    let synthGain = null;
 
-    let bassBusGain = null;
-    let arpBusGain = null;
-    let accentBusGain = null;
+    let vinylSource = null;
+    let rainSource = null;
 
-    let dd5DelayL = null;
-    let dd5DelayR = null;
-    let dd5FeedbackL = null;
-    let dd5FeedbackR = null;
-    let dd5Filter = null;
-    let rv6Reverb = null;
-    let rv6Gain = null;
-
+    // Timer variables
     let timerId = null;
-    let nextTickTime = 0;
+    let nextStepTime = 0;
 
     function initAudio() {
       if (actx) return;
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       actx = new AudioContext();
 
+      // Master Mute Gate for instantaneous silence on STOP
       masterMuteGain = actx.createGain();
       masterMuteGain.gain.setValueAtTime(0.0, actx.currentTime);
 
+      // Master Volume
       masterGain = actx.createGain();
-      masterGain.gain.setValueAtTime(STATE.masterVol, actx.currentTime);
+      masterGain.gain.setValueAtTime(STATE.masterVolume, actx.currentTime);
 
-      bassBusGain = actx.createGain();
-      bassBusGain.gain.setValueAtTime(STATE.bassActive ? STATE.bassVol : 0, actx.currentTime);
+      // Warm Tape Lowpass Filter
+      masterFilter = actx.createBiquadFilter();
+      masterFilter.type = 'lowpass';
+      masterFilter.frequency.setValueAtTime(STATE.filterCutoff, actx.currentTime);
+      masterFilter.Q.setValueAtTime(0.65, actx.currentTime);
 
-      arpBusGain = actx.createGain();
-      arpBusGain.gain.setValueAtTime(STATE.arpActive ? STATE.arpVol : 0, actx.currentTime);
+      // Tape Glue Compressor
+      masterCompressor = actx.createDynamicsCompressor();
+      masterCompressor.threshold.setValueAtTime(-12, actx.currentTime);
+      masterCompressor.knee.setValueAtTime(6, actx.currentTime);
+      masterCompressor.ratio.setValueAtTime(3.5, actx.currentTime);
+      masterCompressor.attack.setValueAtTime(0.025, actx.currentTime);
+      masterCompressor.release.setValueAtTime(0.18, actx.currentTime);
 
-      accentBusGain = actx.createGain();
-      accentBusGain.gain.setValueAtTime(STATE.accentActive ? STATE.accentVol : 0, actx.currentTime);
+      // Analog Tape Delay for Layers 2 and 3
+      tapeDelay = actx.createDelay();
+      tapeDelay.delayTime.setValueAtTime(0.32, actx.currentTime);
+      tapeDelayGain = actx.createGain();
+      tapeDelayGain.gain.setValueAtTime(0.28, actx.currentTime);
+      tapeDelay.connect(tapeDelayGain);
+      tapeDelayGain.connect(tapeDelay);
+      tapeDelayGain.connect(masterFilter);
 
-      vcfFilter = actx.createBiquadFilter();
-      vcfFilter.type = 'lowpass';
-      vcfFilter.frequency.setValueAtTime(STATE.cutoff, actx.currentTime);
-      vcfFilter.Q.setValueAtTime(STATE.peak, actx.currentTime);
+      // Tape Wow & Flutter LFO
+      wobbleOsc = actx.createOscillator();
+      wobbleGain = actx.createGain();
+      wobbleOsc.frequency.setValueAtTime(0.6, actx.currentTime);
+      wobbleGain.gain.setValueAtTime(STATE.tapeWobble * 8, actx.currentTime);
+      wobbleOsc.connect(wobbleGain);
+      wobbleOsc.start();
 
-      bassBusGain.connect(vcfFilter);
-      arpBusGain.connect(vcfFilter);
-      accentBusGain.connect(vcfFilter);
+      // Channel Gain Busses
+      synthGain = actx.createGain();
+      drumGain = actx.createGain();
+      drumGain.gain.setValueAtTime(STATE.drumVolume, actx.currentTime);
+      ambienceGain = actx.createGain();
+      ambienceGain.gain.setValueAtTime(STATE.ambienceVolume, actx.currentTime);
 
-      lfoOsc = actx.createOscillator();
-      lfoGain = actx.createGain();
-      lfoOsc.frequency.setValueAtTime(STATE.lfoRate, actx.currentTime);
-      lfoGain.gain.setValueAtTime(45, actx.currentTime);
-      lfoOsc.connect(lfoGain);
-      lfoGain.connect(vcfFilter.frequency);
-      lfoOsc.start();
+      // Routing
+      synthGain.connect(masterFilter);
+      synthGain.connect(tapeDelay); // Overdub voices get soft analog delay
+      drumGain.connect(masterFilter);
+      ambienceGain.connect(masterFilter);
 
-      dd5DelayL = actx.createDelay();
-      dd5DelayR = actx.createDelay();
-      dd5DelayL.delayTime.setValueAtTime(STATE.delayTime, actx.currentTime);
-      dd5DelayR.delayTime.setValueAtTime(STATE.delayTime * 1.33, actx.currentTime);
-
-      dd5FeedbackL = actx.createGain();
-      dd5FeedbackR = actx.createGain();
-      dd5FeedbackL.gain.setValueAtTime(STATE.delayFeedback, actx.currentTime);
-      dd5FeedbackR.gain.setValueAtTime(STATE.delayFeedback, actx.currentTime);
-
-      dd5Filter = actx.createBiquadFilter();
-      dd5Filter.type = 'lowpass';
-      dd5Filter.frequency.setValueAtTime(4200, actx.currentTime);
-
-      dd5DelayL.connect(dd5FeedbackL);
-      dd5FeedbackL.connect(dd5DelayR);
-      dd5DelayR.connect(dd5FeedbackR);
-      dd5FeedbackR.connect(dd5DelayL);
-
-      initRV6Reverb();
-
-      vcfFilter.connect(masterGain);
-      vcfFilter.connect(dd5DelayL);
-      vcfFilter.connect(dd5DelayR);
-      dd5DelayL.connect(dd5Filter);
-      dd5DelayR.connect(dd5Filter);
-      dd5Filter.connect(masterGain);
-
+      masterFilter.connect(masterCompressor);
+      masterCompressor.connect(masterGain);
       masterGain.connect(masterMuteGain);
       masterMuteGain.connect(actx.destination);
+
+      // Start vinyl & rain noise
+      initTapeAmbience();
     }
 
-    function initRV6Reverb() {
-      const sampleRate = actx.sampleRate;
-      const length = sampleRate * 3.4;
-      const impulse = actx.createBuffer(2, length, sampleRate);
-      const left = impulse.getChannelData(0);
-      const right = impulse.getChannelData(1);
-
-      for (let i = 0; i < length; i++) {
-        const decay = Math.exp(-i / (sampleRate * 1.15));
-        const mod = Math.sin(i * 0.004) * 0.05;
-        left[i] = ((Math.random() * 2 - 1) + mod) * decay;
-        right[i] = ((Math.random() * 2 - 1) - mod) * decay;
+    function initTapeAmbience() {
+      // Vinyl crackle
+      const buffLen = actx.sampleRate * 4;
+      const vinylBuffer = actx.createBuffer(1, buffLen, actx.sampleRate);
+      const vOut = vinylBuffer.getChannelData(0);
+      let lastVal = 0.0;
+      for (let i = 0; i < buffLen; i++) {
+        const white = Math.random() * 2 - 1;
+        vOut[i] = (lastVal + 0.02 * white) / 1.02;
+        lastVal = vOut[i];
+        vOut[i] *= 0.12;
+        if (Math.random() < 0.0006) {
+          vOut[i] += (Math.random() - 0.5) * 0.7;
+        }
       }
+      vinylSource = actx.createBufferSource();
+      vinylSource.buffer = vinylBuffer;
+      vinylSource.loop = true;
 
-      rv6Reverb = actx.createConvolver();
-      rv6Reverb.buffer = impulse;
-      rv6Gain = actx.createGain();
-      rv6Gain.gain.setValueAtTime(STATE.spaceAmount * 0.75, actx.currentTime);
+      const vFilter = actx.createBiquadFilter();
+      vFilter.type = 'bandpass';
+      vFilter.frequency.setValueAtTime(1600, actx.currentTime);
+      vFilter.Q.setValueAtTime(1.0, actx.currentTime);
+      vinylSource.connect(vFilter);
+      vFilter.connect(ambienceGain);
+      vinylSource.start();
 
-      vcfFilter.connect(rv6Reverb);
-      dd5Filter.connect(rv6Reverb);
-      rv6Reverb.connect(rv6Gain);
-      rv6Gain.connect(masterGain);
+      // Soft Rain
+      const rainBuffer = actx.createBuffer(1, buffLen, actx.sampleRate);
+      const rOut = rainBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < buffLen; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99 * b0 + white * 0.05;
+        b1 = 0.95 * b1 + white * 0.12;
+        b2 = 0.85 * b2 + white * 0.25;
+        rOut[i] = (b0 + b1 + b2) * 0.03;
+      }
+      rainSource = actx.createBufferSource();
+      rainSource.buffer = rainBuffer;
+      rainSource.loop = true;
+
+      const rFilter = actx.createBiquadFilter();
+      rFilter.type = 'lowpass';
+      rFilter.frequency.setValueAtTime(1900, actx.currentTime);
+      rainSource.connect(rFilter);
+      rFilter.connect(ambienceGain);
+      rainSource.start();
     }
 
-    function triggerChordSustain(chord, time, duration) {
-      if (!actx || !STATE.bassActive || !bassBusGain) return;
+    function triggerVoice(midi, layer, time = 0, velocity = 0.8) {
+      if (!actx) return;
+      const playTime = time === 0 ? actx.currentTime : time;
+      const freq = mtof(midi);
 
-      const subFreq = mtof(chord.rootMidi);
-      const subOsc = actx.createOscillator();
-      const subSaw = actx.createOscillator();
-      const subGain = actx.createGain();
-
-      subOsc.type = 'triangle';
-      subSaw.type = 'sawtooth';
-      subOsc.frequency.setValueAtTime(subFreq, time);
-      subSaw.frequency.setValueAtTime(subFreq, time);
-
-      subGain.gain.setValueAtTime(0.001, time);
-      subGain.gain.linearRampToValueAtTime(0.24, time + 0.08);
-      subGain.gain.exponentialRampToValueAtTime(0.15, time + duration * 0.75);
-      subGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-
-      subOsc.connect(subGain);
-      subSaw.connect(subGain);
-      subGain.connect(bassBusGain);
-
-      subOsc.start(time);
-      subSaw.start(time);
-      subOsc.stop(time + duration);
-      subSaw.stop(time + duration);
-
-      chord.triad.forEach((mid, idx) => {
+      if (layer === 'bass') {
+        // LAYER 1: Deep Sub-Bass with analog pitch scoop
         const osc = actx.createOscillator();
-        const g = actx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(mtof(mid), time);
-        osc.detune.setValueAtTime((idx - 1) * 7, time);
+        const subOsc = actx.createOscillator();
+        const env = actx.createGain();
+        const filter = actx.createBiquadFilter();
 
-        g.gain.setValueAtTime(0.0001, time);
-        g.gain.linearRampToValueAtTime(0.18 * STATE.chordSustain, time + 0.1);
-        g.gain.exponentialRampToValueAtTime(0.10 * STATE.chordSustain, time + duration * 0.8);
-        g.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+        osc.type = 'triangle';
+        subOsc.type = 'sine';
 
-        osc.connect(g);
-        g.connect(bassBusGain);
+        // Pitch scoop on pluck
+        osc.frequency.setValueAtTime(freq * 1.05, playTime);
+        osc.frequency.exponentialRampToValueAtTime(freq, playTime + 0.04);
+        subOsc.frequency.setValueAtTime(freq, playTime);
 
-        osc.start(time);
-        osc.stop(time + duration);
-      });
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(420, playTime);
+
+        env.gain.setValueAtTime(0.0001, playTime);
+        env.gain.linearRampToValueAtTime(0.65 * velocity, playTime + 0.02);
+        env.gain.exponentialRampToValueAtTime(0.35 * velocity, playTime + 0.25);
+        env.gain.exponentialRampToValueAtTime(0.0001, playTime + 0.75);
+
+        osc.connect(filter);
+        subOsc.connect(filter);
+        filter.connect(env);
+        env.connect(synthGain);
+
+        osc.start(playTime);
+        subOsc.start(playTime);
+        osc.stop(playTime + 0.85);
+        subOsc.stop(playTime + 0.85);
+
+      } else if (layer === 'arp') {
+        // LAYER 2: Warm Polyphonic Arp / Rhodes Tine
+        const carrier = actx.createOscillator();
+        const modulator = actx.createOscillator();
+        const modGain = actx.createGain();
+        const env = actx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'sine';
+
+        carrier.frequency.setValueAtTime(freq, playTime);
+        modulator.frequency.setValueAtTime(freq * 2, playTime);
+        if (wobbleGain) wobbleGain.connect(carrier.frequency);
+
+        modGain.gain.setValueAtTime(freq * 0.7 * velocity, playTime);
+        modGain.gain.exponentialRampToValueAtTime(0.01, playTime + 0.35);
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        env.gain.setValueAtTime(0.0001, playTime);
+        env.gain.linearRampToValueAtTime(0.40 * velocity, playTime + 0.015);
+        env.gain.exponentialRampToValueAtTime(0.12 * velocity, playTime + 0.3);
+        env.gain.exponentialRampToValueAtTime(0.0001, playTime + 0.9);
+
+        carrier.connect(env);
+        env.connect(synthGain);
+
+        carrier.start(playTime);
+        modulator.start(playTime);
+        carrier.stop(playTime + 0.95);
+        modulator.stop(playTime + 0.95);
+
+      } else {
+        // LAYER 3: High Staccato Chime / Crystal Bell
+        const osc = actx.createOscillator();
+        const env = actx.createGain();
+        const filter = actx.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, playTime);
+
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1400, playTime);
+
+        // Fast staccato pluck with sparkle
+        env.gain.setValueAtTime(0.0001, playTime);
+        env.gain.linearRampToValueAtTime(0.35 * velocity, playTime + 0.005);
+        env.gain.exponentialRampToValueAtTime(0.0001, playTime + 0.35);
+
+        osc.connect(filter);
+        filter.connect(env);
+        env.connect(synthGain);
+
+        osc.start(playTime);
+        osc.stop(playTime + 0.4);
+      }
     }
 
-    function triggerBassPulse(midi, time) {
-      if (!actx || !STATE.bassActive || !bassBusGain) return;
-      const freq = mtof(midi);
+    function playKick(time) {
+      if (!actx || STATE.drumPattern === 'mute') return;
       const osc = actx.createOscillator();
-      const env = actx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, time);
-
-      env.gain.setValueAtTime(0.0001, time);
-      env.gain.linearRampToValueAtTime(0.12, time + 0.01);
-      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
-
-      osc.connect(env);
-      env.connect(bassBusGain);
-
+      const gain = actx.createGain();
+      osc.frequency.setValueAtTime(115, time);
+      osc.frequency.exponentialRampToValueAtTime(42, time + 0.08);
+      gain.gain.setValueAtTime(0.9, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.24);
+      osc.connect(gain);
+      gain.connect(drumGain);
       osc.start(time);
-      osc.stop(time + 0.19);
+      osc.stop(time + 0.25);
     }
 
-    function triggerArpNote(midi, time) {
-      if (!actx || !STATE.arpActive || !arpBusGain) return;
-      const freq = mtof(midi);
+    function playSnare(time) {
+      if (!actx || STATE.drumPattern === 'mute') return;
       const osc = actx.createOscillator();
-      const env = actx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, time);
-
-      env.gain.setValueAtTime(0.0001, time);
-      env.gain.linearRampToValueAtTime(0.36, time + 0.006);
-      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.34);
-
-      osc.connect(env);
-      env.connect(arpBusGain);
-
+      const oscGain = actx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(160, time);
+      osc.frequency.exponentialRampToValueAtTime(70, time + 0.08);
+      oscGain.gain.setValueAtTime(0.3, time);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+      osc.connect(oscGain);
+      oscGain.connect(drumGain);
       osc.start(time);
-      osc.stop(time + 0.36);
+      osc.stop(time + 0.13);
+
+      const bufferSize = actx.sampleRate * 0.14;
+      const noiseBuff = actx.createBuffer(1, bufferSize, actx.sampleRate);
+      const out = noiseBuff.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) out[i] = Math.random() * 2 - 1;
+      const noise = actx.createBufferSource();
+      noise.buffer = noiseBuff;
+
+      const nFilter = actx.createBiquadFilter();
+      nFilter.type = 'bandpass';
+      nFilter.frequency.setValueAtTime(1800, time);
+      const nGain = actx.createGain();
+      nGain.gain.setValueAtTime(0.48, time);
+      nGain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+
+      noise.connect(nFilter);
+      nFilter.connect(nGain);
+      nGain.connect(drumGain);
+      noise.start(time);
+      noise.stop(time + 0.15);
     }
 
-    function triggerAccentNote(midi, time) {
-      if (!actx || !STATE.accentActive || !accentBusGain) return;
-      const freq = mtof(midi);
-      const osc = actx.createOscillator();
-      const env = actx.createGain();
+    function playHiHat(time) {
+      if (!actx || STATE.drumPattern === 'mute') return;
+      const dur = 0.05;
+      const bufferSize = Math.floor(actx.sampleRate * dur);
+      const noiseBuff = actx.createBuffer(1, bufferSize, actx.sampleRate);
+      const out = noiseBuff.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) out[i] = Math.random() * 2 - 1;
+      const noise = actx.createBufferSource();
+      noise.buffer = noiseBuff;
 
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, time);
+      const filter = actx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(7000, time);
+      const gain = actx.createGain();
+      gain.gain.setValueAtTime(0.32, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
-      env.gain.setValueAtTime(0.0001, time);
-      env.gain.linearRampToValueAtTime(0.24, time + 0.004);
-      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.14);
-
-      osc.connect(env);
-      env.connect(accentBusGain);
-
-      osc.start(time);
-      osc.stop(time + 0.15);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(drumGain);
+      noise.start(time);
+      noise.stop(time + dur + 0.01);
     }
 
-    function scheduleFluxEngine() {
+    function scheduleSequencer() {
       if (!STATE.isPlaying) return;
 
       const secondsPerBeat = 60.0 / STATE.bpm;
-      const secondsPerTick = secondsPerBeat / 8.0;
-      const chordDuration = secondsPerTick * 32.0;
-      const lookahead = 0.12;
+      const secondsPer16th = secondsPerBeat / 4;
+      const lookahead = 0.1;
 
-      while (nextTickTime < actx.currentTime + lookahead) {
-        const tick = STATE.currentTick128;
-        const playTime = nextTickTime;
+      while (nextStepTime < actx.currentTime + lookahead) {
+        const step = STATE.currentStep;
+        let playTime = nextStepTime;
 
-        const chordIndex = Math.floor(tick / 32) % 4;
-        const currentChord = STATE.bassChords[chordIndex];
-
-        if (tick % 32 === 0) {
-          triggerChordSustain(currentChord, playTime, chordDuration);
-        }
-        
-        if (tick % 4 === 0) {
-          triggerBassPulse(currentChord.rootMidi, playTime);
+        // Apply swing micro-timing on odd 16th steps
+        if (step % 2 === 1) {
+          playTime += secondsPer16th * STATE.swing;
         }
 
-        let activeArpNote = null;
-        if (tick % STATE.arpStepTickInterval === 0) {
-          const activeMotif = computeHarmonicArpMotif(currentChord.rootMidi, currentChord.quality);
-          activeArpNote = activeMotif[STATE.arpIndex % activeMotif.length];
-          triggerArpNote(activeArpNote, playTime);
-          STATE.arpIndex++;
+        // 1. Play recorded notes on this step
+        const notesOnStep = STATE.sequence[step];
+        notesOnStep.forEach(item => {
+          triggerVoice(item.midi, item.layer, playTime, 0.78);
+        });
+
+        // 2. Play backing drums
+        if (STATE.drumPattern === 'boombap') {
+          if (step === 0 || step === 6 || step === 10) playKick(playTime);
+          if (step === 4 || step === 12) playSnare(playTime + 0.008);
+          if (step % 2 === 0 || step === 11 || step === 15) playHiHat(playTime);
+        } else if (STATE.drumPattern === 'chillslow') {
+          if (step === 0 || step === 10) playKick(playTime);
+          if (step === 4 || step === 12) playSnare(playTime);
+          if (step % 2 === 0) playHiHat(playTime);
+        } else if (STATE.drumPattern === 'minimal') {
+          if (step === 4 || step === 12) playSnare(playTime);
+          if (step % 2 === 0) playHiHat(playTime);
         }
 
-        const tickIn8 = tick % 8;
-        if (STATE.accentMask[tickIn8] === 1) {
-          const accentMidi = computeHarmonicAccentNote(currentChord);
-          triggerAccentNote(accentMidi, playTime);
-        }
-
+        // Schedule visual LED trigger on exact audio step time
         const delayMs = Math.max(0, (playTime - actx.currentTime) * 1000);
-        setTimeout(((t, cIdx, cObj, playedArp) => {
-          return () => {
-            const tickDisp = document.getElementById('currentTickDisplay');
-            const chordRootDisp = document.getElementById('chordRootDisp');
-            const chordPhaseText = document.getElementById('currentChordPhaseText');
-            if (tickDisp) tickDisp.innerText = `TICK: ${String(t).padStart(3, '0')} / 128`;
-            if (chordRootDisp) chordRootDisp.innerText = cObj.name;
-            if (chordPhaseText) chordPhaseText.innerText = `ТАКТ ${cIdx + 1} / 4: ${cObj.name}`;
-            highlightChordCard(cIdx);
-            highlightBeatLed(Math.floor(t / 8));
-          };
-        })(tick, chordIndex, currentChord, activeArpNote), delayMs);
+        setTimeout(((s) => {
+          return () => highlightStep(s);
+        })(step), delayMs);
 
-        STATE.currentTick128 = (STATE.currentTick128 + 1) % 128;
-        nextTickTime += secondsPerTick;
-      }
-
-      timerId = setTimeout(scheduleFluxEngine, 25);
-    }
-
-    function highlightChordCard(activeIdx) {
-      for (let i = 0; i < 4; i++) {
-        const card = document.getElementById(`chord-card-${i}`);
-        if (!card) continue;
-        if (i === activeIdx && STATE.isPlaying) {
-          card.className = 'chord-box p-3 rounded-xl border-2 border-vGold bg-vGold/25 shadow-md shadow-vGold/25 ring-1 ring-vGold/60 opacity-100 flex flex-col justify-between min-h-[128px] transition-colors duration-150';
-        } else {
-          card.className = 'chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150';
+        // Advance step
+        STATE.currentStep++;
+        if (STATE.currentStep >= 16) {
+          STATE.currentStep = 0;
+          STATE.loopCount++;
+          document.getElementById('counterDisp').innerText = `LOOP ${String(STATE.loopCount).padStart(2, '0')}`;
         }
+
+        nextStepTime += secondsPer16th;
       }
+
+      timerId = setTimeout(scheduleSequencer, 25);
     }
 
-    function applyChordChange(idx, root, quality) {
-      const rootMidi = ROOT_MIDI_MAP[root] || 38;
-      const thirdOffset = quality === 'm' ? 3 : 4;
-      const triad = [rootMidi + 12, rootMidi + 12 + thirdOffset, rootMidi + 12 + 7];
-      const chordName = `${root} ${quality === 'm' ? 'MINOR' : 'MAJOR'}`;
+    function recordNoteToSequence(midi) {
+      initAudio();
+      if (actx.state === 'suspended') actx.resume();
 
-      STATE.bassChords[idx] = {
-        name: chordName,
-        rootMidi: rootMidi,
-        triad: triad,
-        root: root,
-        quality: quality
+      // Trigger instant sound feedback
+      triggerVoice(midi, STATE.activeLayer, 0, 0.85);
+
+      if (!STATE.isRecording) return;
+
+      // Quantize to nearest 16th step
+      const stepToRecord = STATE.currentStep;
+      
+      const newEvent = {
+        midi: midi,
+        layer: STATE.activeLayer,
+        noteName: midiToName(midi),
+        timestamp: performance.now()
       };
 
-      const nameEl = document.getElementById(`chord-name-${idx}`);
-      const notesEl = document.getElementById(`chord-notes-${idx}`);
+      // Add to sequence step
+      STATE.sequence[stepToRecord].push(newEvent);
 
-      if (nameEl) nameEl.innerText = `${root}${quality === 'm' ? 'm' : ''}`;
-      if (notesEl) notesEl.innerText = `${midiToNoteName(rootMidi)} + ${midiToNoteName(triad[1])} + ${midiToNoteName(triad[2])}`;
-      
-      updateAllArpDisplays();
+      // Push to history for undo
+      STATE.historyStack.push({ step: stepToRecord, event: newEvent });
+
+      updateLayerCounters();
+      drawMatrix();
     }
 
-    function setupChordSelectors() {
-      document.querySelectorAll('.chord-root-select').forEach(sel => {
-        sel.addEventListener('change', (e) => {
-          const idx = parseInt(e.target.getAttribute('data-chord-idx'));
-          const quality = document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`).value;
-          applyChordChange(idx, e.target.value, quality);
-        });
-      });
-
-      document.querySelectorAll('.chord-type-select').forEach(sel => {
-        sel.addEventListener('change', (e) => {
-          const idx = parseInt(e.target.getAttribute('data-chord-idx'));
-          const root = document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`).value;
-          applyChordChange(idx, root, e.target.value);
-        });
-      });
-
-      document.querySelectorAll('.preset-prog-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const chords = e.target.getAttribute('data-prog').split(',');
-          chords.forEach((cStr, idx) => {
-            const isMin = cStr.endsWith('m');
-            const root = isMin ? cStr.slice(0, -1) : cStr;
-            const quality = isMin ? 'm' : 'M';
-
-            const rootSel = document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`);
-            const typeSel = document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`);
-            if (rootSel) rootSel.value = root;
-            if (typeSel) typeSel.value = quality;
-            applyChordChange(idx, root, quality);
-          });
-        });
-      });
-    }
-
-    function updateAllArpDisplays() {
-      STATE.bassChords.forEach((chord, idx) => {
-        const arpEl = document.getElementById(`chord-arp-${idx}`);
-        if (arpEl) {
-          const motif = computeHarmonicArpMotif(chord.rootMidi, chord.quality);
-          arpEl.innerText = motif.map(midiToNoteName).join(' ');
-        }
-      });
-    }
-
-    function renderArpEditor() {
-      const container = document.getElementById('arpEditorsContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      STATE.customArpIntervals.forEach((interval, i) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'flex flex-col gap-1';
-
-        const label = document.createElement('span');
-        label.className = 'text-[9px] text-neutral-400 text-center';
-        label.innerText = `Шаг ${i + 1}`;
-
-        const select = document.createElement('select');
-        select.className = 'bg-black/80 border border-vTeal/40 hover:border-vTeal text-vTeal text-[11px] font-bold rounded p-1 text-center focus:outline-none';
-        
-        const possibleDegrees = [
-          { val: 0, name: '1 (Тоника)' },
-          { val: 3, name: '3 (Терция)' },
-          { val: 7, name: '5 (Квинта)' },
-          { val: 10, name: '7 (Септима)' },
-          { val: 12, name: '8 (Октава)' },
-          { val: 14, name: '9 (Нона)' },
-          { val: 15, name: '10 (Терция + окт)' },
-          { val: 17, name: '11 (Ундецима)' }
-        ];
-
-        possibleDegrees.forEach(opt => {
-          const o = document.createElement('option');
-          o.value = opt.val;
-          o.innerText = opt.name;
-          if (opt.val === interval) o.selected = true;
-          select.appendChild(o);
-        });
-
-        select.addEventListener('change', (e) => {
-          STATE.customArpIntervals[i] = parseInt(e.target.value);
-          updateAllArpDisplays();
-        });
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(select);
-        container.appendChild(wrapper);
-      });
-    }
-
-    function renderAccentEditor() {
-      const container = document.getElementById('accentEditorsContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      STATE.accentMask.forEach((val, i) => {
-        const btn = document.createElement('button');
-        btn.className = `h-9 rounded-lg border font-bold text-xs transition flex items-center justify-center ${val === 1 ? 'bg-vRed/30 border-vRed text-vRed shadow-sm' : 'bg-black/40 border-white/10 text-neutral-600 hover:border-white/30'}`;
-        btn.innerText = val === 1 ? 'X' : '-';
-        btn.addEventListener('click', () => {
-          STATE.accentMask[i] = STATE.accentMask[i] === 1 ? 0 : 1;
-          renderAccentEditor();
-        });
-        container.appendChild(btn);
-      });
-    }
-
-    document.getElementById('arpPresetCarpe').addEventListener('click', () => {
-      STATE.customArpIntervals = [0, 3, 7, 10, 14];
-      renderArpEditor();
-      updateAllArpDisplays();
-    });
-    document.getElementById('arpPresetMaj9').addEventListener('click', () => {
-      STATE.customArpIntervals = [3, 7, 10, 14, 12];
-      renderArpEditor();
-      updateAllArpDisplays();
-    });
-    document.getElementById('arpPresetAsc').addEventListener('click', () => {
-      STATE.customArpIntervals = [0, 3, 7, 12, 15];
-      renderArpEditor();
-      updateAllArpDisplays();
-    });
-
-    document.getElementById('accentPresetSync').addEventListener('click', () => {
-      STATE.accentMask = [0, 0, 1, 1, 0, 0, 0, 0];
-      renderAccentEditor();
-    });
-    document.getElementById('accentPresetEvery').addEventListener('click', () => {
-      STATE.accentMask = [0, 1, 0, 1, 0, 1, 0, 1];
-      renderAccentEditor();
-    });
-    document.getElementById('accentPresetOff').addEventListener('click', () => {
-      STATE.accentMask = [0, 0, 0, 0, 0, 0, 0, 0];
-      renderAccentEditor();
-    });
-
-    const arpModeBtn = document.getElementById('arpModeBtn');
-    const arpModeText = document.getElementById('arpModeText');
-    if (arpModeBtn) {
-      arpModeBtn.addEventListener('click', () => {
-        STATE.arpFollowMode = !STATE.arpFollowMode;
-        if (STATE.arpFollowMode) {
-          arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vTeal/60 text-vTeal hover:bg-vTeal/20 transition font-bold';
-          arpModeText.innerText = 'АРП: СЛЕДОВАТЬ ЗА АККОРДОМ';
-        } else {
-          arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vAmber/60 text-vAmber hover:bg-vAmber/20 transition font-bold';
-          arpModeText.innerText = 'АРП: ФИКСИРОВАННЫЙ МОТИВ';
-        }
-        updateAllArpDisplays();
-      });
-    }
-
-    const beatContainer = document.getElementById('beatLedsContainer');
-    for (let i = 0; i < 16; i++) {
-      const led = document.createElement('div');
-      led.id = `beat-led-${i}`;
-      led.className = `h-2 rounded-full ${i % 4 === 0 ? 'bg-neutral-500' : 'bg-neutral-800'} transition-all`;
-      beatContainer.appendChild(led);
-    }
-
-    function highlightBeatLed(beatIndex) {
-      for (let i = 0; i < 16; i++) {
-        const el = document.getElementById(`beat-led-${i}`);
-        if (!el) continue;
-        if (i === beatIndex && STATE.isPlaying) {
-          el.className = 'h-2 rounded-full tape-led-on';
-        } else {
-          el.className = `h-2 rounded-full ${i % 4 === 0 ? 'bg-neutral-500' : 'bg-neutral-800'}`;
-        }
+    function undoLastNote() {
+      if (STATE.historyStack.length === 0) return;
+      const last = STATE.historyStack.pop();
+      const stepList = STATE.sequence[last.step];
+      const idx = stepList.indexOf(last.event);
+      if (idx !== -1) {
+        stepList.splice(idx, 1);
       }
+      updateLayerCounters();
+      drawMatrix();
     }
 
-    const radarCanvas = document.getElementById('radarCanvas');
-    const rCtx = radarCanvas.getContext('2d');
-
-    function resizeRadar() {
-      radarCanvas.width = radarCanvas.offsetWidth;
-      radarCanvas.height = radarCanvas.offsetHeight;
-    }
-    window.addEventListener('resize', resizeRadar);
-
-    function drawRadar() {
-      requestAnimationFrame(drawRadar);
-      const w = radarCanvas.width;
-      const h = radarCanvas.height;
-      if (!w || !h) return;
-
-      rCtx.clearRect(0, 0, w, h);
-      const cx = w / 2;
-      const cy = h / 2;
-      const outerR = Math.min(cx, cy) - 12;
-
-      const chordColors = ['#e63946', '#f77f00', '#2ec4b6', '#c6923a'];
-
-      for (let t = 0; t < 128; t++) {
-        const angle = (t / 128) * Math.PI * 2 - Math.PI / 2;
-        const px = cx + Math.cos(angle) * outerR;
-        const py = cy + Math.sin(angle) * outerR;
-
-        const isQuarter = t % 32 === 0;
-        const isCurrent = t === STATE.currentTick128 && STATE.isPlaying;
-        const chordQuad = Math.floor(t / 32);
-
-        rCtx.fillStyle = isCurrent ? '#ffffff' : (isQuarter ? chordColors[chordQuad] : 'rgba(255, 255, 255, 0.15)');
-        rCtx.beginPath();
-        rCtx.arc(px, py, isCurrent ? 4.5 : (isQuarter ? 3.2 : 1.4), 0, Math.PI * 2);
-        rCtx.fill();
-      }
-
-      const innerR = outerR * 0.72;
-      rCtx.strokeStyle = 'rgba(198, 146, 58, 0.2)';
-      rCtx.lineWidth = 1.5;
-      rCtx.beginPath();
-      rCtx.arc(cx, cy, innerR, 0, Math.PI * 2);
-      rCtx.stroke();
-
-      for (let n = 0; n < 5; n++) {
-        const angle = (n / 5) * Math.PI * 2 - Math.PI / 2;
-        const px = cx + Math.cos(angle) * innerR;
-        const py = cy + Math.sin(angle) * innerR;
-        const isActive = (n === STATE.arpIndex % 5) && STATE.isPlaying;
-
-        rCtx.fillStyle = isActive ? '#2ec4b6' : 'rgba(46, 196, 182, 0.4)';
-        rCtx.beginPath();
-        rCtx.arc(px, py, isActive ? 5.5 : 3, 0, Math.PI * 2);
-        rCtx.fill();
-      }
-
-      if (STATE.isPlaying) {
-        const angle128 = (STATE.currentTick128 / 128) * Math.PI * 2 - Math.PI / 2;
-        const x128 = cx + Math.cos(angle128) * outerR;
-        const y128 = cy + Math.sin(angle128) * outerR;
-
-        const activeArp = STATE.arpIndex % 5;
-        const angleArp = (activeArp / 5) * Math.PI * 2 - Math.PI / 2;
-        const xArp = cx + Math.cos(angleArp) * innerR;
-        const yArp = cy + Math.sin(angleArp) * innerR;
-
-        const grad = rCtx.createLinearGradient(x128, y128, xArp, yArp);
-        grad.addColorStop(0, '#ff2a2a');
-        grad.addColorStop(1, '#2ec4b6');
-
-        rCtx.strokeStyle = grad;
-        rCtx.lineWidth = 2;
-        rCtx.beginPath();
-        rCtx.moveTo(x128, y128);
-        rCtx.lineTo(xArp, yArp);
-        rCtx.stroke();
-      }
+    function clearEntireLoop() {
+      STATE.sequence = Array.from({ length: 16 }, () => []);
+      STATE.historyStack = [];
+      updateLayerCounters();
+      drawMatrix();
     }
 
-    function setupRotaryKnobs() {
-      const knobElements = document.querySelectorAll('.knob-container');
+    function updateLayerCounters() {
+      let counts = { bass: 0, arp: 0, high: 0 };
+      STATE.sequence.forEach(step => {
+        step.forEach(n => {
+          if (counts[n.layer] !== undefined) counts[n.layer]++;
+        });
+      });
 
-      knobElements.forEach(container => {
-        const param = container.getAttribute('data-param');
-        const min = parseFloat(container.getAttribute('data-min'));
-        const max = parseFloat(container.getAttribute('data-max'));
-        let currentVal = parseFloat(container.getAttribute('data-val'));
-
-        const dial = container.querySelector('.knob-dial');
-        const valText = container.querySelector('.knob-val-text');
-
-        function updateKnobVisual(val) {
-          const fraction = (val - min) / (max - min);
-          const angle = -135 + fraction * 270;
-          if (dial) dial.style.transform = `rotate(${angle}deg)`;
-
-          if (valText) {
-            if (param === 'cutoff') valText.innerText = `${Math.round(val)} Hz`;
-            else if (param === 'peak') valText.innerText = val.toFixed(1);
-            else if (param === 'delayTime') valText.innerText = `${Math.round(val * 1000)} ms`;
-            else if (param === 'delayFeedback' || param === 'space' || param === 'chordSustain' || param === 'bassVol' || param === 'arpVol' || param === 'accentVol' || param === 'masterVol') valText.innerText = `${Math.round(val * 100)}%`;
-            else if (param === 'lfoRate') valText.innerText = `${val.toFixed(1)} Hz`;
-            else if (param === 'bpm') valText.innerText = `${Math.round(val)} BPM`;
-          }
+      document.querySelectorAll('.footage-btn').forEach(btn => {
+        const layer = btn.getAttribute('data-layer');
+        const countSpan = btn.querySelector('.layer-note-count');
+        if (countSpan && counts[layer] !== undefined) {
+          countSpan.innerText = `${counts[layer]} нот`;
         }
-
-        function applyAudioParam(val) {
-          STATE[param] = val;
-          if (!actx) return;
-
-          if (param === 'cutoff' && vcfFilter) {
-            vcfFilter.frequency.setValueAtTime(val, actx.currentTime);
-          } else if (param === 'peak' && vcfFilter) {
-            vcfFilter.Q.setValueAtTime(val, actx.currentTime);
-          } else if (param === 'delayTime' && dd5DelayL && dd5DelayR) {
-            dd5DelayL.delayTime.setValueAtTime(val, actx.currentTime);
-            dd5DelayR.delayTime.setValueAtTime(val * 1.33, actx.currentTime);
-          } else if (param === 'delayFeedback' && dd5FeedbackL && dd5FeedbackR) {
-            dd5FeedbackL.gain.setValueAtTime(val, actx.currentTime);
-            dd5FeedbackR.gain.setValueAtTime(val, actx.currentTime);
-          } else if (param === 'space' && rv6Gain) {
-            rv6Gain.gain.setValueAtTime(val * 0.75, actx.currentTime);
-          } else if (param === 'chordSustain') {
-            STATE.chordSustain = val;
-          } else if (param === 'lfoRate' && lfoOsc) {
-            lfoOsc.frequency.setValueAtTime(val, actx.currentTime);
-          } else if (param === 'bpm') {
-            STATE.bpm = Math.round(val);
-          } else if (param === 'bassVol' && bassBusGain) {
-            bassBusGain.gain.setValueAtTime(STATE.bassActive ? val : 0, actx.currentTime);
-          } else if (param === 'arpVol' && arpBusGain) {
-            arpBusGain.gain.setValueAtTime(STATE.arpActive ? val : 0, actx.currentTime);
-          } else if (param === 'accentVol' && accentBusGain) {
-            accentBusGain.gain.setValueAtTime(STATE.accentActive ? val : 0, actx.currentTime);
-          } else if (param === 'masterVol' && masterGain) {
-            masterGain.gain.setValueAtTime(val, actx.currentTime);
-          }
-        }
-
-        updateKnobVisual(currentVal);
-
-        let isDragging = false;
-        let startY = 0;
-        let startVal = currentVal;
-
-        function onPointerDown(e) {
-          initAudio();
-          isDragging = true;
-          startY = e.clientY || (e.touches && e.touches[0].clientY);
-          startVal = currentVal;
-          document.body.style.cursor = 'ns-resize';
-          window.addEventListener('mousemove', onPointerMove);
-          window.addEventListener('mouseup', onPointerUp);
-          window.addEventListener('touchmove', onPointerMove, { passive: false });
-          window.addEventListener('touchend', onPointerUp);
-        }
-
-        function onPointerMove(e) {
-          if (!isDragging) return;
-          if (e.preventDefault) e.preventDefault();
-          const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-          const dy = startY - clientY;
-
-          const sensitivity = 0.005;
-          const delta = dy * (max - min) * sensitivity;
-          let newVal = Math.max(min, Math.min(max, startVal + delta));
-
-          currentVal = newVal;
-          updateKnobVisual(newVal);
-          applyAudioParam(newVal);
-        }
-
-        function onPointerUp() {
-          isDragging = false;
-          document.body.style.cursor = 'default';
-          window.removeEventListener('mousemove', onPointerMove);
-          window.removeEventListener('mouseup', onPointerUp);
-          window.removeEventListener('touchmove', onPointerMove);
-          window.removeEventListener('touchend', onPointerUp);
-        }
-
-        container.addEventListener('mousedown', onPointerDown);
-        container.addEventListener('touchstart', onPointerDown, { passive: false });
       });
     }
 
@@ -1272,11 +888,15 @@
       }
 
       STATE.isPlaying = true;
-      nextTickTime = actx.currentTime + 0.04;
-      scheduleFluxEngine();
+      nextStepTime = actx.currentTime + 0.05;
+      scheduleSequencer();
 
-      document.getElementById('playText').innerText = 'PAUSE LOOP';
+      document.getElementById('playText').innerText = 'PAUSE';
       document.getElementById('playIcon').innerText = '⏸';
+      document.getElementById('deckStatusText').innerText = STATE.isRecording ? 'OVERDUB REC...' : 'PLAYING LOOP';
+      document.getElementById('deckStatusText').className = 'font-bold tracking-wider text-tape-neon';
+      document.getElementById('spoolL').classList.remove('tape-wheel-paused');
+      document.getElementById('spoolR').classList.remove('tape-wheel-paused');
     }
 
     function pausePlayback() {
@@ -1286,106 +906,702 @@
       if (masterMuteGain && actx) {
         masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
         masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
-        masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.04);
+        masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.05);
       }
 
-      document.getElementById('playText').innerText = 'PLAY FLUX LOOP';
+      document.getElementById('playText').innerText = 'PLAY';
       document.getElementById('playIcon').innerText = '▶';
-      highlightBeatLed(null);
+      document.getElementById('deckStatusText').innerText = 'PAUSED';
+      document.getElementById('deckStatusText').className = 'font-bold tracking-wider text-neutral-400';
+      document.getElementById('spoolL').classList.add('tape-wheel-paused');
+      document.getElementById('spoolR').classList.add('tape-wheel-paused');
     }
 
     function stopPlayback() {
-      pausePlayback();
-      STATE.currentTick128 = 0;
-      STATE.arpIndex = 0;
-      document.getElementById('currentTickDisplay').innerText = 'TICK: 000 / 128';
-      highlightChordCard(0);
+      STATE.isPlaying = false;
+      clearTimeout(timerId);
+
+      if (masterMuteGain && actx) {
+        masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
+        masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
+        masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.04);
+      }
+
+      STATE.currentStep = 0;
+      STATE.loopCount = 1;
+      document.getElementById('counterDisp').innerText = 'LOOP 01';
+      document.getElementById('currentStepDisplay').innerText = 'ШАГ: 01 / 16';
+
+      document.getElementById('playText').innerText = 'PLAY';
+      document.getElementById('playIcon').innerText = '▶';
+      document.getElementById('deckStatusText').innerText = 'STOPPED';
+      document.getElementById('deckStatusText').className = 'font-bold tracking-wider text-neutral-400';
+      document.getElementById('spoolL').classList.add('tape-wheel-paused');
+      document.getElementById('spoolR').classList.add('tape-wheel-paused');
+
+      highlightStep(null);
+      drawMatrix();
     }
 
+    function rewindToBeginning() {
+      STATE.currentStep = 0;
+      if (actx) {
+        const secondsPerBeat = 60.0 / STATE.bpm;
+        nextStepTime = actx.currentTime + 0.02;
+      }
+      document.getElementById('currentStepDisplay').innerText = 'ШАГ: 01 / 16';
+      highlightStep(0);
+      drawMatrix();
+    }
+
+    function toggleOverdub() {
+      STATE.isRecording = !STATE.isRecording;
+      const recLed = document.getElementById('recStatusLed');
+      const overdubBtn = document.getElementById('overdubBtn');
+      const overdubText = document.getElementById('overdubText');
+
+      if (STATE.isRecording) {
+        recLed.classList.remove('bg-neutral-600');
+        recLed.classList.add('bg-red-500', 'led-glow-red');
+        overdubBtn.classList.add('bg-red-600', 'text-white');
+        overdubText.innerText = 'OVERDUB ON';
+        if (!STATE.isPlaying) startPlayback();
+        document.getElementById('deckStatusText').innerText = 'OVERDUB REC...';
+        document.getElementById('deckStatusText').className = 'font-bold tracking-wider text-red-400';
+      } else {
+        recLed.classList.remove('bg-red-500', 'led-glow-red');
+        recLed.classList.add('bg-neutral-600');
+        overdubBtn.classList.remove('bg-red-600', 'text-white');
+        overdubText.innerText = 'RECORD';
+        if (STATE.isPlaying) {
+          document.getElementById('deckStatusText').innerText = 'PLAYING LOOP';
+          document.getElementById('deckStatusText').className = 'font-bold tracking-wider text-tape-neon';
+        }
+      }
+    }
+
+    const stepStrip = document.getElementById('stepStrip');
+    for (let i = 0; i < 16; i++) {
+      const btn = document.createElement('div');
+      btn.id = `step-led-${i}`;
+      btn.className = `h-10 rounded-lg bg-black/60 border ${i % 4 === 0 ? 'border-tape-gold/50' : 'border-tape-border'} flex flex-col items-center justify-center font-mono text-[10px] transition-all cursor-pointer hover:border-tape-gold`;
+      btn.innerHTML = `<span class="text-neutral-400 font-bold">${i + 1}</span><div class="w-1.5 h-1.5 rounded-full bg-neutral-700 mt-1 led-dot"></div>`;
+      
+      // Clicking a step lets you clear its notes
+      btn.addEventListener('click', () => {
+        STATE.sequence[i] = [];
+        updateLayerCounters();
+        drawMatrix();
+      });
+
+      stepStrip.appendChild(btn);
+    }
+
+    function highlightStep(stepIdx) {
+      for (let i = 0; i < 16; i++) {
+        const el = document.getElementById(`step-led-${i}`);
+        if (!el) continue;
+        const dot = el.querySelector('.led-dot');
+        if (i === stepIdx) {
+          el.classList.add('step-active-head');
+          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-tape-accent led-dot';
+        } else {
+          el.classList.remove('step-active-head');
+          if (dot) {
+            const hasNotes = STATE.sequence[i].length > 0;
+            dot.className = `w-1.5 h-1.5 rounded-full ${hasNotes ? 'bg-tape-neon' : 'bg-neutral-700'} led-dot`;
+          }
+        }
+      }
+      if (stepIdx !== null) {
+        document.getElementById('currentStepDisplay').innerText = `ШАГ: ${String(stepIdx + 1).padStart(2, '0')} / 16`;
+      }
+    }
+
+    // Multi-Layer Canvas Matrix Drawing
+    const matrixCanvas = document.getElementById('matrixCanvas');
+    const mCtx = matrixCanvas.getContext('2d');
+
+    const LAYER_LANES = [
+      { id: 'high', label: "СЛОЙ 3: АКЦЕНТЫ (2')", color: '#b5838d', octave: 2 },
+      { id: 'arp',  label: "СЛОЙ 2: АРПЕДЖИО (8')", color: '#f39c12', octave: 8 },
+      { id: 'bass', label: "СЛОЙ 1: БАС (16')",     color: '#2ec4b6', octave: 16 }
+    ];
+
+    function resizeMatrix() {
+      matrixCanvas.width = matrixCanvas.offsetWidth;
+      matrixCanvas.height = matrixCanvas.offsetHeight;
+      drawMatrix();
+    }
+    window.addEventListener('resize', resizeMatrix);
+
+    function getCanvasCoords(e) {
+      const rect = matrixCanvas.getBoundingClientRect();
+      const scaleX = matrixCanvas.width / rect.width;
+      const scaleY = matrixCanvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    function getLaneAndStepAt(x, y) {
+      const w = matrixCanvas.width;
+      const h = matrixCanvas.height;
+      const colW = w / 16;
+      const laneH = h / 3;
+
+      const step = Math.max(0, Math.min(15, Math.floor(x / colW)));
+      const laneIdx = Math.max(0, Math.min(2, Math.floor(y / laneH)));
+      const lane = LAYER_LANES[laneIdx];
+      return { step, lane, laneIdx, colW, laneH };
+    }
+
+    function findNoteAt(x, y) {
+      const { step, lane, colW, laneH, laneIdx } = getLaneAndStepAt(x, y);
+      const notes = STATE.sequence[step];
+      for (let i = notes.length - 1; i >= 0; i--) {
+        const n = notes[i];
+        if (n.layer === lane.id) {
+          const noteY = laneIdx * laneH + 6;
+          const noteH = laneH - 12;
+          const noteX = step * colW + 2;
+          const noteW = colW - 4;
+          if (x >= noteX && x <= noteX + noteW && y >= noteY && y <= noteY + noteH) {
+            return { step, noteIndex: i, note: n, noteX, noteY, noteW, noteH, lane };
+          }
+        }
+      }
+      return null;
+    }
+
+    function drawMatrix() {
+      const w = matrixCanvas.width;
+      const h = matrixCanvas.height;
+      if (!w || !h) return;
+
+      mCtx.fillStyle = '#0a0910';
+      mCtx.fillRect(0, 0, w, h);
+
+      const colW = w / 16;
+      const laneH = h / 3;
+
+      // Draw 3 horizontal lane backgrounds & borders
+      LAYER_LANES.forEach((lane, idx) => {
+        const y = idx * laneH;
+        
+        // Subtle lane background
+        mCtx.fillStyle = idx % 2 === 0 ? 'rgba(255, 255, 255, 0.015)' : 'rgba(0, 0, 0, 0.15)';
+        mCtx.fillRect(0, y, w, laneH);
+
+        // Lane divider
+        mCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        mCtx.lineWidth = 1;
+        mCtx.beginPath();
+        mCtx.moveTo(0, y);
+        mCtx.lineTo(w, y);
+        mCtx.stroke();
+
+        // Lane label in background
+        mCtx.fillStyle = lane.color;
+        mCtx.font = 'bold 9px "JetBrains Mono", monospace';
+        mCtx.globalAlpha = 0.35;
+        mCtx.fillText(lane.label, 8, y + 14);
+        mCtx.globalAlpha = 1.0;
+      });
+
+      // Draw Step columns & beat dividers
+      for (let s = 0; s < 16; s++) {
+        const isBarBeat = s % 4 === 0;
+        mCtx.strokeStyle = isBarBeat ? 'rgba(243, 156, 18, 0.35)' : 'rgba(255, 255, 255, 0.04)';
+        mCtx.lineWidth = isBarBeat ? 1.5 : 1;
+        mCtx.beginPath();
+        mCtx.moveTo(s * colW, 0);
+        mCtx.lineTo(s * colW, h);
+        mCtx.stroke();
+
+        // Step number indicator at the top
+        mCtx.fillStyle = isBarBeat ? '#f39c12' : '#555';
+        mCtx.font = '8px "JetBrains Mono", monospace';
+        mCtx.fillText(String(s + 1), s * colW + 4, h - 4);
+      }
+
+      // Drag target column highlight
+      if (STATE.dragState) {
+        const targetX = STATE.dragState.targetStep * colW;
+        mCtx.fillStyle = 'rgba(243, 156, 18, 0.15)';
+        mCtx.fillRect(targetX, 0, colW, h);
+
+        mCtx.strokeStyle = '#f39c12';
+        mCtx.lineWidth = 1.5;
+        mCtx.strokeRect(targetX + 1, 1, colW - 2, h - 2);
+      }
+
+      // Draw Playhead bar
+      if (STATE.isPlaying && STATE.currentStep !== null) {
+        const curX = STATE.currentStep * colW;
+        mCtx.fillStyle = 'rgba(255, 183, 3, 0.18)';
+        mCtx.fillRect(curX, 0, colW, h);
+        mCtx.strokeStyle = '#ffb703';
+        mCtx.lineWidth = 2;
+        mCtx.strokeRect(curX, 0, colW, h);
+      }
+
+      // Draw Notes
+      for (let s = 0; s < 16; s++) {
+        const notes = STATE.sequence[s];
+        notes.forEach((note, nIdx) => {
+          // If being dragged, draw faintly at source position
+          const isBeingDragged = STATE.dragState && STATE.dragState.sourceStep === s && STATE.dragState.noteIndex === nIdx;
+          const laneIdx = LAYER_LANES.findIndex(l => l.id === note.layer);
+          if (laneIdx === -1) return;
+
+          const lane = LAYER_LANES[laneIdx];
+          const x = s * colW + 2;
+          const y = laneIdx * laneH + 6;
+          const nw = colW - 4;
+          const nh = laneH - 12;
+
+          mCtx.save();
+          if (isBeingDragged) {
+            mCtx.globalAlpha = 0.25;
+          }
+
+          // Note body
+          mCtx.fillStyle = lane.color;
+          mCtx.shadowColor = lane.color;
+          mCtx.shadowBlur = isBeingDragged ? 0 : 8;
+
+          // Rounded note pill
+          mCtx.beginPath();
+          mCtx.roundRect(x, y, nw, nh, 4);
+          mCtx.fill();
+          mCtx.shadowBlur = 0;
+
+          // Note border
+          mCtx.strokeStyle = '#fff';
+          mCtx.lineWidth = 1;
+          mCtx.stroke();
+
+          // Note Text
+          mCtx.fillStyle = '#000';
+          mCtx.font = 'bold 10px "JetBrains Mono", monospace';
+          mCtx.textAlign = 'center';
+          mCtx.textBaseline = 'middle';
+          mCtx.fillText(note.noteName, x + nw / 2, y + nh / 2);
+
+          mCtx.restore();
+        });
+      }
+
+      // Draw active dragging note following mouse cursor
+      if (STATE.dragState && STATE.dragState.hasMoved) {
+        const laneIdx = LAYER_LANES.findIndex(l => l.id === STATE.dragState.note.layer);
+        const lane = LAYER_LANES[laneIdx] || LAYER_LANES[0];
+        const nw = colW - 4;
+        const nh = laneH - 12;
+        const dragX = STATE.dragState.currentX - nw / 2;
+        const dragY = STATE.dragState.currentY - nh / 2;
+
+        mCtx.save();
+        mCtx.fillStyle = lane.color;
+        mCtx.shadowColor = '#fff';
+        mCtx.shadowBlur = 12;
+
+        mCtx.beginPath();
+        mCtx.roundRect(dragX, dragY, nw, nh, 5);
+        mCtx.fill();
+
+        mCtx.strokeStyle = '#fff';
+        mCtx.lineWidth = 2;
+        mCtx.stroke();
+
+        mCtx.fillStyle = '#000';
+        mCtx.font = 'bold 10px "JetBrains Mono", monospace';
+        mCtx.textAlign = 'center';
+        mCtx.textBaseline = 'middle';
+        mCtx.fillText(STATE.dragState.note.noteName, dragX + nw / 2, dragY + nh / 2);
+        mCtx.restore();
+      }
+    }
+
+    // --- Interactive Mouse Editing Handlers ---
+    matrixCanvas.addEventListener('mousedown', (e) => {
+      if (e.button === 2) return; // Right-click handled separately
+      initAudio();
+      if (actx.state === 'suspended') actx.resume();
+
+      const { x, y } = getCanvasCoords(e);
+      const hit = findNoteAt(x, y);
+
+      if (hit) {
+        // Start dragging existing note
+        STATE.dragState = {
+          sourceStep: hit.step,
+          noteIndex: hit.noteIndex,
+          note: hit.note,
+          targetStep: hit.step,
+          targetLaneId: hit.lane.id,
+          startX: x,
+          startY: y,
+          currentX: x,
+          currentY: y,
+          hasMoved: false
+        };
+        matrixCanvas.style.cursor = 'grabbing';
+      } else {
+        // Click on empty space: place note on this step!
+        const { step, lane } = getLaneAndStepAt(x, y);
+        const octaveNotes = SCALES[lane.octave];
+        const midi = octaveNotes[STATE.activePadIndex % octaveNotes.length];
+
+        const newNote = {
+          midi: midi,
+          layer: lane.id,
+          noteName: midiToName(midi),
+          timestamp: performance.now()
+        };
+
+        STATE.sequence[step].push(newNote);
+        STATE.historyStack.push({ step, event: newNote });
+
+        // Play audition sound
+        triggerVoice(midi, lane.id, 0, 0.85);
+
+        updateLayerCounters();
+        drawMatrix();
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const { x, y } = getCanvasCoords(e);
+
+      if (STATE.dragState) {
+        const dx = Math.abs(x - STATE.dragState.startX);
+        const dy = Math.abs(y - STATE.dragState.startY);
+        if (dx > 4 || dy > 4) {
+          STATE.dragState.hasMoved = true;
+        }
+        STATE.dragState.currentX = x;
+        STATE.dragState.currentY = y;
+
+        const { step } = getLaneAndStepAt(x, y);
+        STATE.dragState.targetStep = step;
+
+        drawMatrix();
+      } else {
+        // Hover state
+        const hit = findNoteAt(x, y);
+        matrixCanvas.style.cursor = hit ? 'grab' : 'crosshair';
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (!STATE.dragState) return;
+
+      const drag = STATE.dragState;
+      STATE.dragState = null;
+      matrixCanvas.style.cursor = 'crosshair';
+
+      if (drag.hasMoved) {
+        // Move note from source step to target step
+        const sourceList = STATE.sequence[drag.sourceStep];
+        const noteToMove = sourceList.splice(drag.noteIndex, 1)[0];
+
+        if (noteToMove) {
+          STATE.sequence[drag.targetStep].push(noteToMove);
+          triggerVoice(noteToMove.midi, noteToMove.layer, 0, 0.8);
+        }
+      } else {
+        // Single click on existing note: Delete it!
+        const sourceList = STATE.sequence[drag.sourceStep];
+        sourceList.splice(drag.noteIndex, 1);
+      }
+
+      updateLayerCounters();
+      drawMatrix();
+    });
+
+    // Right-click to directly delete note
+    matrixCanvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const { x, y } = getCanvasCoords(e);
+      const hit = findNoteAt(x, y);
+      if (hit) {
+        STATE.sequence[hit.step].splice(hit.noteIndex, 1);
+        updateLayerCounters();
+        drawMatrix();
+      }
+    });
+
+    const padsContainer = document.getElementById('padsContainer');
+    function renderPads() {
+      padsContainer.innerHTML = '';
+      const notes = SCALES[STATE.activeOctave];
+      notes.forEach((midi, idx) => {
+        const pad = document.createElement('button');
+        pad.className = 'sound-pad h-16 bg-tape-panelLight border border-tape-border hover:border-tape-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group';
+        pad.innerHTML = `
+          <span class="text-white font-black group-hover:text-tape-gold transition">${midiToName(midi)}</span>
+          <span class="text-[10px] text-neutral-500 mt-1">${idx + 1}</span>
+        `;
+        pad.addEventListener('click', () => {
+          STATE.activePadIndex = idx;
+          recordNoteToSequence(midi);
+          pad.classList.add('border-tape-gold', 'scale-95');
+          setTimeout(() => pad.classList.remove('border-tape-gold', 'scale-95'), 140);
+        });
+        padsContainer.appendChild(pad);
+      });
+    }
+
+    // Footage Selector buttons (32', 16', 8', 4', 2', 1')
+    document.querySelectorAll('.footage-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const layer = btn.getAttribute('data-layer');
+        const oct = parseInt(btn.getAttribute('data-octave'));
+        STATE.activeLayer = layer;
+        STATE.activeOctave = oct;
+
+        // UI highlight
+        document.querySelectorAll('.footage-btn').forEach(b => {
+          b.classList.remove('border-tape-neon', 'bg-tape-neon/10', 'border-tape-gold', 'bg-tape-gold/10', 'border-tape-purple', 'bg-tape-purple/10');
+          b.classList.add('border-tape-border', 'bg-black/40', 'opacity-85');
+        });
+
+        btn.classList.remove('border-tape-border', 'bg-black/40', 'opacity-85');
+        if (layer === 'bass') {
+          btn.classList.add('border-tape-neon', 'bg-tape-neon/10');
+          document.getElementById('activeLayerPill').className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-tape-neon/20 text-tape-neon border border-tape-neon/40';
+          document.getElementById('activeLayerPill').innerText = "Слой 1 (Бас 16')";
+        } else if (layer === 'arp') {
+          btn.classList.add('border-tape-gold', 'bg-tape-gold/10');
+          document.getElementById('activeLayerPill').className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-tape-gold/20 text-tape-gold border border-tape-gold/40';
+          document.getElementById('activeLayerPill').innerText = "Слой 2 (Арпеджио 8')";
+        } else {
+          btn.classList.add('border-tape-purple', 'bg-tape-purple/10');
+          document.getElementById('activeLayerPill').className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-tape-purple/20 text-tape-purple border border-tape-purple/40';
+          document.getElementById('activeLayerPill').innerText = "Слой 3 (Акценты 2')";
+        }
+
+        renderPads();
+      });
+    });
+
+    // Transport Listeners
     document.getElementById('playBtn').addEventListener('click', () => {
       if (STATE.isPlaying) pausePlayback();
       else startPlayback();
     });
 
     document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+    document.getElementById('rewindBtn').addEventListener('click', rewindToBeginning);
+    document.getElementById('overdubBtn').addEventListener('click', toggleOverdub);
+    document.getElementById('clearAllBtn').addEventListener('click', clearEntireLoop);
+    document.getElementById('undoLayerBtn').addEventListener('click', undoLastNote);
 
-    document.getElementById('muteBassBtn').addEventListener('click', function() {
-      STATE.bassActive = !STATE.bassActive;
-      this.classList.toggle('opacity-40');
-      if (bassBusGain && actx) bassBusGain.gain.setValueAtTime(STATE.bassActive ? STATE.bassVol : 0, actx.currentTime);
-    });
-    document.getElementById('muteArpBtn').addEventListener('click', function() {
-      STATE.arpActive = !STATE.arpActive;
-      this.classList.toggle('opacity-40');
-      if (arpBusGain && actx) arpBusGain.gain.setValueAtTime(STATE.arpActive ? STATE.arpVol : 0, actx.currentTime);
-    });
-    document.getElementById('muteAccentBtn').addEventListener('click', function() {
-      STATE.accentActive = !STATE.accentActive;
-      this.classList.toggle('opacity-40');
-      if (accentBusGain && actx) accentBusGain.gain.setValueAtTime(STATE.accentActive ? STATE.accentVol : 0, actx.currentTime);
+    // BPM & Swing sliders
+    document.getElementById('bpmSlider').addEventListener('input', (e) => {
+      STATE.bpm = parseInt(e.target.value);
+      document.getElementById('bpmVal').innerText = STATE.bpm;
     });
 
-    document.getElementById('loadPresetBtn').addEventListener('click', () => {
-      STATE.cutoff = 160;
-      STATE.peak = 5.0;
-      STATE.delayTime = 0.32;
-      STATE.delayFeedback = 0.58;
-      STATE.spaceAmount = 0.65;
-      STATE.chordSustain = 0.85;
-      STATE.bpm = 68;
-      STATE.customArpIntervals = [0, 3, 7, 10, 14];
-      
-      // Carpe Diem звучит с оригинальным фиксированным мотивом поверх Dm-Bb-F-C
-      STATE.arpFollowMode = false;
-      const arpModeBtn = document.getElementById('arpModeBtn');
-      const arpModeText = document.getElementById('arpModeText');
-      if (arpModeBtn) {
-        arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vAmber/60 text-vAmber hover:bg-vAmber/20 transition font-bold';
-        arpModeText.innerText = 'АРП: ФИКСИРОВАННЫЙ МОТИВ';
-      }
-
-      renderArpEditor();
-
-      const cutoffKnob = document.querySelector('[data-param="cutoff"]');
-      if (cutoffKnob) {
-        const dial = cutoffKnob.querySelector('.knob-dial');
-        const text = cutoffKnob.querySelector('.knob-val-text');
-        if (dial) dial.style.transform = `rotate(-130deg)`;
-        if (text) text.innerText = `160 Hz`;
-      }
-      if (vcfFilter && actx) vcfFilter.frequency.setValueAtTime(160, actx.currentTime);
-
-      const prog = ["Dm", "Bb", "F", "C"];
-      prog.forEach((cStr, idx) => {
-        const isMin = cStr.endsWith('m');
-        const root = isMin ? cStr.slice(0, -1) : cStr;
-        const quality = isMin ? 'm' : 'M';
-        const rootSel = document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`);
-        const typeSel = document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`);
-        if (rootSel) rootSel.value = root;
-        if (typeSel) typeSel.value = quality;
-        applyChordChange(idx, root, quality);
-      });
-      updateAllArpDisplays();
-
-      if (!STATE.isPlaying) startPlayback();
+    document.getElementById('swingSlider').addEventListener('input', (e) => {
+      STATE.swing = parseInt(e.target.value) / 100;
+      document.getElementById('swingVal').innerText = `${e.target.value}%`;
     });
 
+    document.getElementById('drumPatternSelect').addEventListener('change', (e) => {
+      STATE.drumPattern = e.target.value;
+    });
+
+    document.getElementById('drumVolSlider').addEventListener('input', (e) => {
+      STATE.drumVolume = parseFloat(e.target.value);
+      document.getElementById('drumVolDisp').innerText = `${Math.round(STATE.drumVolume * 100)}%`;
+      if (drumGain && actx) drumGain.gain.setValueAtTime(STATE.drumVolume, actx.currentTime);
+    });
+
+    document.getElementById('masterVolume').addEventListener('input', (e) => {
+      STATE.masterVolume = parseFloat(e.target.value);
+      document.getElementById('masterVolDisp').innerText = `${Math.round(STATE.masterVolume * 100)}%`;
+      if (masterGain && actx) masterGain.gain.setValueAtTime(STATE.masterVolume, actx.currentTime);
+    });
+
+    document.getElementById('wobbleSlider').addEventListener('input', (e) => {
+      STATE.tapeWobble = parseFloat(e.target.value);
+      document.getElementById('wobbleVal').innerText = `${Math.round(STATE.tapeWobble * 100)}%`;
+      if (wobbleGain && actx) wobbleGain.gain.setValueAtTime(STATE.tapeWobble * 8, actx.currentTime);
+    });
+
+    document.getElementById('filterSlider').addEventListener('input', (e) => {
+      STATE.filterCutoff = parseInt(e.target.value);
+      document.getElementById('filterVal').innerText = `${STATE.filterCutoff} Hz`;
+      if (masterFilter && actx) masterFilter.frequency.setValueAtTime(STATE.filterCutoff, actx.currentTime);
+    });
+
+    document.getElementById('ambienceSlider').addEventListener('input', (e) => {
+      STATE.ambienceVolume = parseFloat(e.target.value);
+      document.getElementById('ambienceVal').innerText = `${Math.round(STATE.ambienceVolume * 100)}%`;
+      if (ambienceGain && actx) ambienceGain.gain.setValueAtTime(STATE.ambienceVolume, actx.currentTime);
+    });
+
+    // Computer keyboard 1-8 keys for live play & overdub recording
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      const keyNum = parseInt(e.key);
+      if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= 8) {
+        STATE.activePadIndex = keyNum - 1;
+        const notes = SCALES[STATE.activeOctave];
+        const midi = notes[keyNum - 1];
+        if (midi) recordNoteToSequence(midi);
+      } else if (e.code === 'Space') {
         e.preventDefault();
         if (STATE.isPlaying) pausePlayback();
         else startPlayback();
+      } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
+        toggleOverdub();
+      } else if (e.key === 'Home') {
+        rewindToBeginning();
       }
     });
 
-    setupRotaryKnobs();
-    setupChordSelectors();
-    renderArpEditor();
-    renderAccentEditor();
-    updateAllArpDisplays();
-    setTimeout(resizeRadar, 100);
-    drawRadar();
+    document.getElementById('exportMidiBtn').addEventListener('click', () => {
+      function writeVarLength(value) {
+        let buffer = [];
+        let v = value & 0x7F;
+        while ((value >>= 7)) {
+          v <<= 8;
+          v |= 0x80;
+          v += (value & 0x7F);
+        }
+        while (true) {
+          buffer.push(v & 0xFF);
+          if (v & 0x80) v >>= 8;
+          else break;
+        }
+        return buffer;
+      }
+
+      const ticksPerBeat = 480;
+      const ticksPer16th = Math.floor(ticksPerBeat / 4);
+      const bpm = STATE.bpm;
+      const microsecondsPerBeat = Math.round(60000000 / bpm);
+
+      let track0 = [
+        0x00, 0xFF, 0x51, 0x03, 
+        (microsecondsPerBeat >> 16) & 0xFF, 
+        (microsecondsPerBeat >> 8) & 0xFF, 
+        microsecondsPerBeat & 0xFF,
+        0x00, 0xFF, 0x2F, 0x00
+      ];
+
+      let bassEvents = [];
+      let arpEvents = [];
+      let highEvents = [];
+      let drumEvents = [];
+
+      for (let bar = 0; bar < 4; bar++) {
+        const barStartTick = bar * 4 * ticksPerBeat;
+        for (let s = 0; s < 16; s++) {
+          let stepTick = barStartTick + s * ticksPer16th;
+          if (s % 2 === 1) stepTick += Math.floor(ticksPer16th * STATE.swing);
+
+          // Overdub recorded notes
+          STATE.sequence[s].forEach(item => {
+            const target = item.layer === 'bass' ? bassEvents : (item.layer === 'arp' ? arpEvents : highEvents);
+            const statusOn = item.layer === 'bass' ? 0x90 : (item.layer === 'arp' ? 0x91 : 0x92);
+            const statusOff = item.layer === 'bass' ? 0x80 : (item.layer === 'arp' ? 0x81 : 0x82);
+            target.push({ tick: stepTick, status: statusOn, note: item.midi, vel: 90 });
+            target.push({ tick: stepTick + Math.floor(ticksPer16th * 1.5), status: statusOff, note: item.midi, vel: 0 });
+          });
+
+          // Drums
+          if (STATE.drumPattern !== 'mute') {
+            if (s === 0 || s === 6 || s === 10) {
+              drumEvents.push({ tick: stepTick, status: 0x99, note: 36, vel: 100 });
+              drumEvents.push({ tick: stepTick + 60, status: 0x89, note: 36, vel: 0 });
+            }
+            if (s === 4 || s === 12) {
+              drumEvents.push({ tick: stepTick, status: 0x99, note: 38, vel: 90 });
+              drumEvents.push({ tick: stepTick + 80, status: 0x89, note: 38, vel: 0 });
+            }
+            if (s % 2 === 0) {
+              drumEvents.push({ tick: stepTick, status: 0x99, note: 42, vel: 70 });
+              drumEvents.push({ tick: stepTick + 40, status: 0x89, note: 42, vel: 0 });
+            }
+          }
+        }
+      }
+
+      function buildTrackChunk(events) {
+        events.sort((a, b) => a.tick - b.tick);
+        let trackBytes = [];
+        let lastTick = 0;
+        events.forEach(e => {
+          let delta = e.tick - lastTick;
+          lastTick = e.tick;
+          trackBytes.push(...writeVarLength(delta));
+          trackBytes.push(e.status, e.note, e.vel);
+        });
+        trackBytes.push(0x00, 0xFF, 0x2F, 0x00);
+        const len = trackBytes.length;
+        return [
+          0x4D, 0x54, 0x72, 0x6B,
+          (len >> 24) & 0xFF,
+          (len >> 16) & 0xFF,
+          (len >> 8) & 0xFF,
+          len & 0xFF,
+          ...trackBytes
+        ];
+      }
+
+      const t1 = buildTrackChunk(bassEvents);
+      const t2 = buildTrackChunk(arpEvents);
+      const t3 = buildTrackChunk(highEvents);
+      const t4 = buildTrackChunk(drumEvents);
+
+      const t0Len = track0.length;
+      const t0Chunk = [
+        0x4D, 0x54, 0x72, 0x6B,
+        (t0Len >> 24) & 0xFF,
+        (t0Len >> 16) & 0xFF,
+        (t0Len >> 8) & 0xFF,
+        t0Len & 0xFF,
+        ...track0
+      ];
+
+      const headerChunk = [
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x01,
+        0x00, 0x05, // 5 tracks
+        (ticksPerBeat >> 8) & 0xFF,
+        ticksPerBeat & 0xFF
+      ];
+
+      const fullMidi = new Uint8Array([
+        ...headerChunk,
+        ...t0Chunk,
+        ...t1,
+        ...t2,
+        ...t3,
+        ...t4
+      ]);
+
+      const blob = new Blob([fullMidi], { type: 'audio/midi' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `TapeOverdub_${bpm}BPM.mid`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Initial setup
+    renderPads();
+    setTimeout(resizeMatrix, 100);
 
   })();
   </script>
