@@ -3,2000 +3,767 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lofinfinity - Infinite Procedural Lo-Fi Generator</title>
+  <title>Volca Keys - 128-Step FLUX Station (Custom Arp)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Outfit', 'sans-serif'],
+            volca: ['Oswald', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
-            lofi: {
-              bg: '#100f16',
-              card: '#181622',
-              cardLight: '#211e2f',
-              accent: '#f4a261',
-              pink: '#e76f51',
-              purple: '#b5838d',
-              cyan: '#80ced7',
-              text: '#e6e1e5',
-              muted: '#7f788c'
-            }
+            vFace: '#1a181b',
+            vChassis: '#110f13',
+            vPanel: '#242129',
+            vGold: '#c6923a',
+            vRed: '#e63946',
+            vAmber: '#f77f00',
+            vLed: '#ff2a2a',
+            vTeal: '#2ec4b6'
           }
         }
       }
     }
   </script>
   <style>
-    .scanlines {
-      background: linear-gradient(rgba(16, 15, 22, 0) 50%, rgba(0, 0, 0, 0.28) 50%);
-      background-size: 100% 4px;
-      pointer-events: none;
-    }
-    input[type=range] {
-      accent-color: #f4a261;
-    }
-    .tape-spin {
-      animation: spin 3.4s linear infinite;
-    }
-    .tape-spin-paused {
-      animation-play-state: paused;
-    }
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
-    }
-    .glow-accent {
-      box-shadow: 0 0 16px rgba(244, 162, 97, 0.35);
-    }
-    .solo-pad:active {
-      transform: scale(0.94);
-      background-color: #f4a261;
-      color: #100f16;
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #100f16;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #2b273d;
-      border-radius: 4px;
-    }
+    .knob-container { user-select: none; touch-action: none; }
+    .knob-dial { transition: transform 0.04s ease-out; transform-origin: center center; }
+    .tape-led-on { background-color: #ff2a2a; box-shadow: 0 0 10px #ff2a2a, 0 0 18px rgba(255, 42, 42, 0.75); }
+    .volca-acrylic-knob { background: radial-gradient(circle, rgba(255, 60, 60, 0.45) 0%, rgba(20, 16, 22, 0.95) 75%); box-shadow: inset 0 0 10px rgba(255, 50, 50, 0.5), 0 0 14px rgba(255, 40, 40, 0.25); }
+    .metal-plate { background: linear-gradient(180deg, #2b2733 0%, #1c1a22 40%, #15131a 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 30px rgba(0, 0, 0, 0.85); }
+    .clear-acrylic { background: radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.4) 100%); border: 1px solid rgba(255, 255, 255, 0.1); }
   </style>
 </head>
-<body class="bg-lofi-bg text-lofi-text font-sans min-h-screen flex flex-col selection:bg-lofi-accent selection:text-black overflow-x-hidden relative">
+<body class="bg-[#0b0a0e] text-neutral-200 font-mono min-h-screen p-3 sm:p-6 flex flex-col items-center select-none selection:bg-vGold selection:text-black">
 
-  <!-- Scanlines Retro Filter -->
-  <div id="scanlineOverlay" class="scanlines fixed inset-0 z-50 pointer-events-none opacity-40"></div>
-
-  <!-- Top Navigation Header -->
-  <header class="border-b border-white/10 bg-lofi-card/85 backdrop-blur-md px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-40">
-    <div class="flex items-center space-x-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-lofi-pink via-lofi-accent to-lofi-purple flex items-center justify-center text-black font-mono font-bold shadow-md shadow-lofi-accent/20">
-        ∞
-      </div>
-      <div>
-        <h1 class="text-base sm:text-lg font-bold tracking-wider text-white flex items-center gap-2">
-          LOFINFINITY <span class="text-[10px] px-2 py-0.5 rounded-full bg-lofi-accent/15 text-lofi-accent border border-lofi-accent/30 font-mono">PRO</span>
-        </h1>
-        <p class="text-[11px] text-lofi-muted hidden sm:block">Генератор бесконечного Lo-Fi хип-хопа & Соло джем</p>
-      </div>
-    </div>
-
-    <!-- Master Volume, Pomodoro, Tools -->
-    <div class="flex items-center flex-wrap gap-3 sm:gap-5 text-xs font-mono">
-      <!-- Master Volume in Header -->
-      <div class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-1.5 shadow-inner">
-        <span class="text-lofi-accent text-sm" title="Общая громкость">🔊</span>
-        <span class="text-lofi-muted hidden md:inline">МАСТЕР:</span>
-        <input type="range" id="masterVolumeSlider" min="0" max="1" step="0.01" value="0.85" class="w-20 sm:w-28 cursor-pointer h-1.5 rounded bg-white/20">
-        <span id="masterVolumeDisplay" class="font-bold text-white w-9 text-right">85%</span>
-      </div>
-
-      <!-- Pomodoro Timer -->
-      <div class="hidden sm:flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-3 py-1.5">
-        <span class="inline-block w-2 h-2 rounded-full bg-lofi-cyan animate-pulse"></span>
-        <span id="pomoLabel" class="text-lofi-muted">ФОКУС:</span>
-        <span id="pomoDisplay" class="font-bold text-white">25:00</span>
-        <button id="pomoToggleBtn" class="hover:text-lofi-accent text-lofi-muted transition ml-1" title="Старт/Пауза">▶</button>
-        <button id="pomoResetBtn" class="hover:text-lofi-pink text-lofi-muted transition" title="Сброс">↺</button>
-      </div>
-
-      <!-- CRT Toggle -->
-      <button id="scanlinesBtn" class="px-2.5 py-1.5 rounded-lg border border-white/10 bg-black/30 hover:border-lofi-accent/50 text-lofi-muted hover:text-white transition">
-        CRT: ON
-      </button>
-
-      <!-- MIDI Export -->
-      <button id="exportMidiBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-lofi-accent/20 hover:bg-lofi-accent text-lofi-accent hover:text-black font-semibold border border-lofi-accent/40 transition">
-        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
-        <span>MIDI .MID</span>
-      </button>
-    </div>
-  </header>
-
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+  <main class="w-full max-w-5xl metal-plate rounded-3xl border-2 border-[#383344] p-5 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col gap-5">
     
-    <!-- LEFT PANEL: Cassette, Visualizer, Solo Live Jam & Controls (8 Cols) -->
-    <div class="lg:col-span-8 flex flex-col gap-5">
-      
-      <!-- Cassette & Visualizer Screen -->
-      <div class="relative bg-black/70 rounded-2xl border border-white/10 p-5 shadow-2xl overflow-hidden backdrop-blur-md">
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="px-2.5 py-1 bg-vGold text-black font-volca font-bold text-lg tracking-widest rounded shadow">
+          VOLCA
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-volca font-bold tracking-widest text-white uppercase flex items-center gap-2">
+            KEYS <span class="text-xs text-vGold font-mono font-normal">128-STEP FLUX &bull; NOTE EDITOR</span>
+          </h1>
+          <p class="text-[10px] text-neutral-400">Volca Keys (128 Ticks = 4 Такта) &bull; Полный контроль над нотами арпеджио</p>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2 sm:gap-3 text-xs">
+        <button id="loadPresetBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-vGold/20 hover:bg-vGold text-vGold hover:text-black border border-vGold/50 transition font-bold shadow-sm">
+          <span>🎬</span>
+          <span>ТРЕК ИЗ ВИДЕО (CARPE DIEM)</span>
+        </button>
+
+        <button id="arpModeBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vTeal/60 text-vTeal hover:bg-vTeal/20 transition font-bold">
+          <span class="w-2 h-2 rounded-full bg-vTeal"></span>
+          <span id="arpModeText">АРП: СЛЕДОВАТЬ ЗА АККОРДОМ</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 4 Ticks / Chords Progression Section -->
+    <div class="bg-black/60 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
+      <div class="flex flex-wrap items-center justify-between text-xs gap-2">
+        <span class="text-neutral-300 font-bold flex items-center gap-2">
+          <span class="text-vGold">🎼</span> 4 ТАКТА ГАРМОНИИ (ПО 1 ТАКТУ / 32 ТИКА НА АККОРД)
+        </span>
         
-        <!-- Status Bar -->
-        <div class="flex flex-wrap items-center justify-between border-b border-white/5 pb-3 mb-4 text-xs font-mono gap-2">
-          <div class="flex items-center gap-2">
-            <span id="recDot" class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-            <span id="playbackStatus" class="tracking-widest text-lofi-muted font-bold">STOPPED</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="text-lofi-muted">ГАРМОНИЯ: <span id="chordProgressDisplay" class="text-lofi-accent font-bold">ii7 - V7 - Imaj7 - VI7</span></span>
-            <span class="text-lofi-muted">ТОНАЛЬНОСТЬ: <span id="currentKeyDisplay" class="text-lofi-pink font-bold">A Minor</span></span>
-          </div>
-        </div>
-
-        <!-- Cassette Deck Graphic Simulation -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 my-2">
-          <!-- Tape Wheels -->
-          <div class="relative w-64 h-36 bg-[#201d2a] rounded-xl border-4 border-[#353046] p-3 flex items-center justify-between shadow-inner">
-            <!-- Left Reel -->
-            <div class="relative w-20 h-20 rounded-full border-4 border-[#121118] bg-[#121118] flex items-center justify-center">
-              <div id="spoolLeft" class="tape-spin tape-spin-paused w-16 h-16 rounded-full border-2 border-dashed border-lofi-accent/70 flex items-center justify-center">
-                <div class="w-6 h-6 rounded-full bg-[#353046] border-2 border-white/40"></div>
-              </div>
-            </div>
-            
-            <!-- Window / Counter -->
-            <div class="w-16 h-11 bg-black/70 rounded border border-white/10 flex flex-col items-center justify-center">
-              <span id="tapeCounter" class="font-mono text-xs text-lofi-cyan tracking-widest">00:00</span>
-              <span class="text-[8px] text-lofi-muted uppercase">TYPE II</span>
-            </div>
-
-            <!-- Right Reel -->
-            <div class="relative w-20 h-20 rounded-full border-4 border-[#121118] bg-[#121118] flex items-center justify-center">
-              <div id="spoolRight" class="tape-spin tape-spin-paused w-16 h-16 rounded-full border-2 border-dashed border-lofi-accent/70 flex items-center justify-center">
-                <div class="w-6 h-6 rounded-full bg-[#353046] border-2 border-white/40"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Live Spectrum / Rain / Audio Visualizer Canvas -->
-          <div class="w-full sm:w-1/2 h-36 relative bg-black/50 rounded-xl border border-white/5 overflow-hidden flex flex-col">
-            <canvas id="visualizerCanvas" class="w-full h-full block"></canvas>
-          </div>
-        </div>
-
-        <!-- Real-Time Interactive Piano Roll Canvas -->
-        <div class="mt-4 pt-3 border-t border-white/5">
-          <div class="flex items-center justify-between text-[11px] font-mono text-lofi-muted mb-1.5">
-            <span class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-lofi-accent"></span> PIANO ROLL (НОТЫ В РЕАЛЬНОМ ВРЕМЕНИ)
-            </span>
-            <span id="currentChordName" class="text-lofi-cyan font-bold">READY</span>
-          </div>
-          <div class="h-20 w-full bg-black/60 rounded-lg border border-white/5 relative overflow-hidden">
-            <canvas id="pianoRollCanvas" class="w-full h-full block"></canvas>
-          </div>
+        <div class="flex items-center gap-1.5 text-[11px]">
+          <span class="text-neutral-400">Пресеты:</span>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Dm,Bb,F,C">Dm-Bb-F-C</button>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Am,F,C,G">Am-F-C-G</button>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Em,C,G,D">Em-C-G-D</button>
         </div>
       </div>
 
-      <!-- Transport Buttons & Groove Parameters -->
-      <div class="bg-lofi-card rounded-2xl border border-white/10 p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-        <div class="flex items-center flex-wrap gap-3">
-          <!-- Play / Pause Button -->
-          <button id="playBtn" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-lofi-accent to-lofi-pink text-black font-bold font-mono tracking-wide shadow-lg shadow-lofi-accent/25 hover:brightness-110 active:scale-95 transition">
-            <svg id="playIcon" class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            <span id="playText">СТАРТ</span>
-          </button>
-
-          <!-- Stop Button -->
-          <button id="stopBtn" class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/5 hover:bg-red-500/20 hover:border-red-400/40 border border-white/10 text-white hover:text-red-300 font-mono text-sm active:scale-95 transition" title="Полный стоп и сброс кассеты">
-            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
-            <span>СТОП</span>
-          </button>
-
-          <!-- Next Vibe (Generative Chords) -->
-          <button id="diceBtn" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-mono text-sm active:scale-95 transition shadow-sm" title="Сгенерировать новую гармонию и прогрессию аккордов">
-            <span>🎲</span>
-            <span class="font-semibold text-lofi-accent">NEXT VIBE</span>
-          </button>
-        </div>
-
-        <!-- Groove Settings (BPM, Swing, Key) -->
-        <div class="flex flex-wrap items-center gap-4 text-xs font-mono">
-          <!-- BPM -->
-          <div class="flex flex-col gap-1">
-            <div class="flex justify-between text-lofi-muted">
-              <span>BPM</span>
-              <span id="bpmValue" class="text-white font-bold">78</span>
-            </div>
-            <input type="range" id="bpmInput" min="60" max="96" value="78" class="w-24 cursor-pointer">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Generates 4 Chord Cards -->
+        <div id="chord-card-0" class="chord-box p-3 rounded-xl border-2 border-vGold bg-vGold/20 shadow-md shadow-vGold/25 ring-1 ring-vGold/60 opacity-100 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-vGold tracking-wider">ТАКТ 1 (АККОРД 1)</span>
           </div>
-
-          <!-- Swing -->
-          <div class="flex flex-col gap-1">
-            <div class="flex justify-between text-lofi-muted">
-              <span>СВИНГ</span>
-              <span id="swingValue" class="text-white font-bold">28%</span>
-            </div>
-            <input type="range" id="swingInput" min="0" max="60" value="28" class="w-20 cursor-pointer">
-          </div>
-
-          <!-- Key Mode -->
-          <div class="flex flex-col gap-1">
-            <span class="text-lofi-muted">ТОНИКА</span>
-            <select id="keySelect" class="bg-black/60 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-lofi-accent text-xs">
-              <option value="AUTO" selected>🎲 Случайно</option>
-              <option value="C">C (До)</option>
-              <option value="D">D (Ре)</option>
-              <option value="Eb">Eb (Ми-бемоль)</option>
-              <option value="F">F (Фа)</option>
-              <option value="G">G (Соль)</option>
-              <option value="A">A (Ля)</option>
-              <option value="Bb">Bb (Си-бемоль)</option>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 text-white rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="0">
+              <option value="C">C</option><option value="C#">C#</option><option value="D" selected>D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 text-vGold rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="0">
+              <option value="m" selected>m (min)</option><option value="M">M (maj)</option>
             </select>
           </div>
-        </div>
-      </div>
-
-      <!-- Interactive Solo Melodic Station -->
-      <div class="bg-lofi-card rounded-2xl border border-white/10 p-5 shadow-xl">
-        <div class="flex flex-wrap items-center justify-between border-b border-white/5 pb-3 mb-4 gap-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🎷</span>
-            <div>
-              <h3 class="text-sm font-bold text-white font-mono tracking-wide">СОЛО-ИНСТРУМЕНТ И ИМПРОВИЗАЦИЯ</h3>
-              <p class="text-[11px] text-lofi-muted">Авто-соло под гармонию или ручная игра с клавиатуры (клавиши 1-8)</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2 font-mono text-xs">
-            <!-- Trigger Solo Fill Button -->
-            <button id="triggerSoloBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-lofi-cyan/20 hover:bg-lofi-cyan text-lofi-cyan hover:text-black border border-lofi-cyan/40 transition font-bold">
-              <span>✨</span>
-              <span>СОЛО РИФФ</span>
-            </button>
-            
-            <!-- Auto Solo Mode -->
-            <label class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 cursor-pointer hover:border-white/20">
-              <input type="checkbox" id="autoSoloCheck" class="rounded accent-lofi-accent" checked>
-              <span class="text-lofi-text text-[11px]">Авто-соло</span>
-            </label>
+          <div class="flex flex-col gap-1 text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1.5 mt-1.5">
+            <div class="flex justify-between w-full"><span class="text-neutral-500">БАС:</span> <span id="chord-notes-0" class="font-bold text-white">D2 + F3 + A3</span></div>
+            <div class="flex justify-between w-full"><span class="text-neutral-500">АРП:</span> <span id="chord-arp-0" class="font-bold text-vTeal">D4 F4 A4 C5 E5</span></div>
           </div>
         </div>
 
-        <!-- Solo Instrument Selection & Volume -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-xs font-mono">
-          <div class="flex flex-col gap-1.5">
-            <span class="text-lofi-muted">ТЕМБР СОЛО:</span>
-            <select id="leadTimbreSelect" class="bg-black/60 border border-white/10 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-lofi-accent">
-              <option value="guitar" selected>🎸 Lo-Fi Guitar (Нейлон с лёгким дилеем)</option>
-              <option value="trumpet">🎺 Muted Trumpet (Джазовая труба с сурдиной)</option>
-              <option value="flute">🎋 Bamboo Flute (Дыхание восточной флейты)</option>
-              <option value="synth">✨ Analog Sine Lead (Винтажный мягкий лид)</option>
+        <div id="chord-card-1" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 2 (АККОРД 2)</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 text-white rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="1">
+              <option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb" selected>Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 text-vGold rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="1">
+              <option value="m">m (min)</option><option value="M" selected>M (maj)</option>
             </select>
           </div>
-
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-center justify-between text-lofi-muted">
-              <span>ГРОМКОСТЬ СОЛО</span>
-              <div class="flex items-center gap-2">
-                <button id="leadMuteBtn" class="px-2 py-0.5 rounded text-[10px] bg-white/10 hover:bg-red-500/20 text-lofi-muted hover:text-red-400 border border-white/10 transition">MUTE</button>
-                <span id="leadVolVal" class="text-lofi-accent font-bold w-9 text-right">65%</span>
-              </div>
-            </div>
-            <input type="range" id="leadVol" min="0" max="1" step="0.01" value="0.65" class="w-full mt-2 cursor-pointer">
+          <div class="flex flex-col gap-1 text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1.5 mt-1.5">
+            <div class="flex justify-between w-full"><span class="text-neutral-500">БАС:</span> <span id="chord-notes-1" class="font-bold text-white">Bb1 + D3 + F3</span></div>
+            <div class="flex justify-between w-full"><span class="text-neutral-500">АРП:</span> <span id="chord-arp-1" class="font-bold text-vTeal">Bb3 Db4 F4 Ab4 C5</span></div>
           </div>
         </div>
 
-        <!-- Live Pentatonic Jam Pads (Adapts to current scale) -->
-        <div class="mt-3">
-          <div class="text-[11px] font-mono text-lofi-muted mb-2 flex justify-between">
-            <span>КЛАВИШИ ДЛЯ ДЖЕМА (Нажмите кнопку или клавиши 1-8 на клавиатуре):</span>
-            <span id="scaleNotesDisplay" class="text-lofi-accent font-bold">A - C - D - E - G</span>
+        <div id="chord-card-2" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 3 (АККОРД 3)</span>
           </div>
-          <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="0">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">C4</span>
-              <span class="text-[10px] text-lofi-muted">1</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="1">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">D4</span>
-              <span class="text-[10px] text-lofi-muted">2</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="2">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">Eb4</span>
-              <span class="text-[10px] text-lofi-muted">3</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="3">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">F4</span>
-              <span class="text-[10px] text-lofi-muted">4</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="4">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">G4</span>
-              <span class="text-[10px] text-lofi-muted">5</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="5">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">Ab4</span>
-              <span class="text-[10px] text-lofi-muted">6</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="6">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">Bb4</span>
-              <span class="text-[10px] text-lofi-muted">7</span>
-            </button>
-            <button class="solo-pad h-14 bg-black/40 hover:bg-lofi-accent/20 border border-white/10 hover:border-lofi-accent rounded-xl flex flex-col items-center justify-center font-mono transition text-xs group" data-note-index="7">
-              <span class="text-lofi-accent font-bold group-hover:scale-110 transition note-name">C5</span>
-              <span class="text-[10px] text-lofi-muted">8</span>
-            </button>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 text-white rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="2">
+              <option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F" selected>F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 text-vGold rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="2">
+              <option value="m">m (min)</option><option value="M" selected>M (maj)</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1 text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1.5 mt-1.5">
+            <div class="flex justify-between w-full"><span class="text-neutral-500">БАС:</span> <span id="chord-notes-2" class="font-bold text-white">F2 + A3 + C4</span></div>
+            <div class="flex justify-between w-full"><span class="text-neutral-500">АРП:</span> <span id="chord-arp-2" class="font-bold text-vTeal">F4 Ab4 C5 Eb5 G5</span></div>
+          </div>
+        </div>
+
+        <div id="chord-card-3" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 4 (АККОРД 4)</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 text-white rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="3">
+              <option value="C" selected>C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 text-vGold rounded px-2 py-1 text-xs font-bold font-mono" data-chord-idx="3">
+              <option value="m">m (min)</option><option value="M" selected>M (maj)</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1 text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1.5 mt-1.5">
+            <div class="flex justify-between w-full"><span class="text-neutral-500">БАС:</span> <span id="chord-notes-3" class="font-bold text-white">C2 + E3 + G3</span></div>
+            <div class="flex justify-between w-full"><span class="text-neutral-500">АРП:</span> <span id="chord-arp-3" class="font-bold text-vTeal">C4 Eb4 G4 Bb4 D5</span></div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- RIGHT PANEL: Multi-channel Mixer & Cassette Master (4 Cols) -->
-    <div class="lg:col-span-4 flex flex-col gap-5">
+    <!-- Note & Accent Editors -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       
-      <!-- Instruments Mixer & Timbre Selectors -->
-      <div class="bg-lofi-card rounded-2xl border border-white/10 p-5 shadow-xl">
-        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-          <h2 class="text-sm font-bold tracking-wider text-white font-mono flex items-center gap-1.5">
-            <span>🎛️</span> ТРЕК-МИКШЕР И ИНСТРУМЕНТЫ
-          </h2>
-          <span class="text-[10px] text-lofi-accent font-mono">TAPE CHANNELS</span>
-        </div>
-
-        <div class="space-y-4 font-mono text-xs">
-          
-          <!-- Keys Channel -->
-          <div class="bg-black/30 p-3 rounded-xl border border-white/5">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="flex items-center gap-1.5 text-white font-bold">🎹 Клавишные</span>
-              <div class="flex items-center gap-2">
-                <button id="keysMuteBtn" class="px-2 py-0.5 rounded text-[10px] bg-white/10 hover:bg-red-500/20 text-lofi-muted hover:text-red-400 border border-white/10 transition">MUTE</button>
-                <span id="keysVolVal" class="text-lofi-accent font-bold w-8 text-right">85%</span>
-              </div>
-            </div>
-            <select id="keysTypeSelect" class="w-full bg-lofi-cardLight border border-white/10 text-white rounded-lg px-2.5 py-1.5 mb-2 focus:outline-none focus:border-lofi-accent text-[11px]">
-              <option value="rhodes" selected>Fender Rhodes (FM Tines)</option>
-              <option value="pad">Warm Ambient Pad (Мягкие синусоиды)</option>
-              <option value="wurlitzer">Wurlitzer Vintage (Винтажный электропиано)</option>
-              <option value="vibes">Glass Vibraphone (Хрустальные колокольчики)</option>
-            </select>
-            <input type="range" id="keysVol" min="0" max="1" step="0.01" value="0.85" class="w-full cursor-pointer">
-          </div>
-
-          <!-- Bass Channel -->
-          <div class="bg-black/30 p-3 rounded-xl border border-white/5">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="flex items-center gap-1.5 text-white font-bold">🎸 Бас</span>
-              <div class="flex items-center gap-2">
-                <button id="bassMuteBtn" class="px-2 py-0.5 rounded text-[10px] bg-white/10 hover:bg-red-500/20 text-lofi-muted hover:text-red-400 border border-white/10 transition">MUTE</button>
-                <span id="bassVolVal" class="text-lofi-accent font-bold w-8 text-right">80%</span>
-              </div>
-            </div>
-            <select id="bassTypeSelect" class="w-full bg-lofi-cardLight border border-white/10 text-white rounded-lg px-2.5 py-1.5 mb-2 focus:outline-none focus:border-lofi-accent text-[11px]">
-              <option value="upright" selected>Upright Double Bass (Контрабас)</option>
-              <option value="sub">Deep 808 Sub-Bass (Глубокий Саб)</option>
-              <option value="analog">Vintage Moog Synth Bass (Аналоговый)</option>
-            </select>
-            <input type="range" id="bassVol" min="0" max="1" step="0.01" value="0.80" class="w-full cursor-pointer">
-          </div>
-
-          <!-- Drums Channel -->
-          <div class="bg-black/30 p-3 rounded-xl border border-white/5">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="flex items-center gap-1.5 text-white font-bold">🥁 Ударные</span>
-              <div class="flex items-center gap-2">
-                <button id="drumMuteBtn" class="px-2 py-0.5 rounded text-[10px] bg-white/10 hover:bg-red-500/20 text-lofi-muted hover:text-red-400 border border-white/10 transition">MUTE</button>
-                <span id="drumVolVal" class="text-lofi-accent font-bold w-8 text-right">75%</span>
-              </div>
-            </div>
-            <select id="drumTypeSelect" class="w-full bg-lofi-cardLight border border-white/10 text-white rounded-lg px-2.5 py-1.5 mb-2 focus:outline-none focus:border-lofi-accent text-[11px]">
-              <option value="boombap" selected>Classic 90s Boom-Bap (Жирный бит)</option>
-              <option value="dusty">Dusty Cassette (Приглушенные кассетные)</option>
-              <option value="trap808">Minimal Chill 808 (Электронные мягкие)</option>
-            </select>
-            <input type="range" id="drumVol" min="0" max="1" step="0.01" value="0.75" class="w-full cursor-pointer">
-          </div>
-
-        </div>
-
-        <!-- Background Organic Textures -->
-        <h2 class="text-sm font-bold tracking-wider text-white font-mono flex items-center justify-between mt-6 mb-3 border-b border-white/5 pb-2">
-          <span>🌧️ АМБИЕНТ И ШУМЫ</span>
-          <span class="text-[10px] text-lofi-cyan">REALTIME NOISE</span>
-        </h2>
-
-        <div class="space-y-3 font-mono text-xs">
-          <!-- Vinyl Crackle -->
-          <div class="bg-black/20 p-2.5 rounded-xl border border-white/5">
-            <div class="flex items-center justify-between text-lofi-muted mb-1.5">
-              <span class="flex items-center gap-1.5 text-white font-medium">📀 Винил</span>
-              <div class="flex items-center gap-2">
-                <button id="vinylMuteBtn" class="px-2 py-0.5 rounded text-[10px] bg-white/10 hover:bg-red-500/20 text-lofi-muted hover:text-red-400 border border-white/10 transition">MUTE</button>
-                <span id="vinylVolVal" class="text-lofi-accent font-bold w-8 text-right">45%</span>
-              </div>
-            </div>
-            <input type="range" id="vinylVol" min="0" max="1" step="0.01" value="0.45" class="w-full cursor-pointer">
-          </div>
-
-          <!-- Rain -->
-          <div class="bg-black/20 p-2.5 rounded-xl border border-white/5">
-            <div class="flex items-center justify-between text-lofi-muted mb-1.5">
-              <span class="flex items-center gap-1.5 text-white font-medium">🌧️ Дождь</span>
-              <div class="flex items-center gap-2">
-                <button id="rainMuteBtn" class="px-2 py-0.5 rounded text-[10px] bg-white/10 hover:bg-red-500/20 text-lofi-muted hover:text-red-400 border border-white/10 transition">MUTE</button>
-                <span id="rainVolVal" class="text-lofi-accent font-bold w-8 text-right">35%</span>
-              </div>
-            </div>
-            <input type="range" id="rainVol" min="0" max="1" step="0.01" value="0.35" class="w-full cursor-pointer">
-          </div>
-
-          <!-- Tape Wow / Flutter -->
-          <div class="bg-black/20 p-2.5 rounded-xl border border-white/5">
-            <div class="flex justify-between text-lofi-muted mb-1.5">
-              <span class="flex items-center gap-1.5 text-white font-medium">📼 Питч-дрейф (Wobble)</span>
-              <span id="wobbleVolVal" class="text-lofi-accent font-bold">30%</span>
-            </div>
-            <input type="range" id="wobbleVol" min="0" max="1" step="0.01" value="0.30" class="w-full cursor-pointer">
+      <!-- ARP Absolute Note Editor -->
+      <div class="bg-black/60 border border-vTeal/30 rounded-2xl p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+          <span class="font-bold text-vTeal flex items-center gap-1.5">
+            <span>🎹</span> РЕДАКТОР НОТ АРПЕДЖИО (5 ШАГОВ)
+          </span>
+          <div class="flex items-center gap-1">
+            <button id="arpPresetCarpe" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Carpe Diem</button>
+            <button id="arpPresetSpace" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Space Triad</button>
           </div>
         </div>
 
-        <!-- Master Cassette Rack -->
-        <h2 class="text-sm font-bold tracking-wider text-white font-mono flex items-center justify-between mt-6 mb-3 border-b border-white/5 pb-2">
-          <span>🎚️ МАСТЕРИНГ КАССЕТЫ</span>
-          <span class="text-[10px] text-lofi-pink">WARMTH</span>
-        </h2>
-        <div class="space-y-3 font-mono text-xs">
-          <div>
-            <div class="flex justify-between text-lofi-muted mb-1">
-              <span>Теплый Lowpass фильтр</span>
-              <span id="filterCutoffVal">3800 Hz</span>
-            </div>
-            <input type="range" id="filterCutoff" min="1000" max="12000" step="50" value="3800" class="w-full">
-          </div>
-
-          <div>
-            <div class="flex justify-between text-lofi-muted mb-1">
-              <span>Аналоговая сатурация (Drive)</span>
-              <span id="driveVal">Subtle Warm</span>
-            </div>
-            <input type="range" id="driveAmount" min="0" max="1" step="0.05" value="0.25" class="w-full">
-          </div>
+        <div class="grid grid-cols-5 gap-2" id="arpNoteEditorsContainer">
+          <!-- JS fills this with selects -->
         </div>
-
+        <span class="text-[10px] text-neutral-400">Укажите точные ноты мотива. В режиме "Следовать" этот мотив будет плавно сдвигаться вместе с басом.</span>
       </div>
 
-      <!-- Quick Tips Card -->
-      <div class="bg-black/30 border border-white/5 rounded-2xl p-4 text-xs font-mono text-lofi-muted leading-relaxed">
-        <p class="mb-2 text-white font-semibold flex items-center gap-1.5">
-          <span>💡</span> Как играть соло:
-        </p>
-        Нажимайте на клавиши <b class="text-lofi-accent">1, 2, 3, 4, 5, 6, 7, 8</b> на клавиатуре компьютера во время воспроизведения бита. Ноты автоматически согласованы с текущей джазовой тональностью!
+      <!-- Accent Pattern Editor -->
+      <div class="bg-black/60 border border-vRed/30 rounded-2xl p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+          <span class="font-bold text-vRed flex items-center gap-1.5">
+            <span>✨</span> РЕДАКТОР АКЦЕНТОВ (8 ШАГОВ)
+          </span>
+          <div class="flex items-center gap-1">
+            <button id="accentPresetSync" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Syncopated</button>
+            <button id="accentPresetOff" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Mute</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-8 gap-1.5" id="accentEditorsContainer">
+          <!-- JS fills this -->
+        </div>
+        <span class="text-[10px] text-neutral-400">Колокольчики автоматически берут чистые консонансные обертоны аккорда (тоника или квинта).</span>
+      </div>
+
+    </div>
+
+    <!-- Radar & Knobs Layout (Same as before) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+      <!-- 128-Tick Radar -->
+      <div class="lg:col-span-5 clear-acrylic rounded-2xl p-4 flex flex-col items-center justify-center relative">
+        <div class="w-full flex items-center justify-between text-[11px] text-neutral-400 mb-2">
+          <span>РАДАР 128 ТИКОВ</span>
+          <span id="currentTickDisplay" class="text-vGold font-bold font-mono">TICK: 000 / 128</span>
+        </div>
+        <div class="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
+          <canvas id="radarCanvas" class="w-full h-full block"></canvas>
+          <div class="absolute flex flex-col items-center pointer-events-none">
+            <span id="chordRootDisp" class="text-xl sm:text-2xl font-volca font-bold text-white tracking-widest">D MINOR</span>
+            <span id="phaseLagDisp" class="text-[10px] text-vAmber font-bold mt-0.5">СДВИГ: +3 ТИКА/ЦИКЛ</span>
+          </div>
+        </div>
+        <div class="w-full flex flex-col gap-1 mt-3">
+          <div class="flex justify-between text-[9px] text-neutral-500 uppercase px-0.5">
+            <span>Такт 1</span><span>Такт 2</span><span>Такт 3</span><span>Такт 4</span>
+          </div>
+          <div class="w-full grid grid-cols-16 gap-1" id="beatLedsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Rotary Knobs & Mixer -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        <!-- VCF & Delays -->
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2 mb-4">
+            <span class="text-xs font-bold text-vGold tracking-wider flex items-center gap-1.5">
+              <span>🎛️</span> VCF ФИЛЬТР И DELAY
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center justify-items-center">
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="cutoff" data-min="100" data-max="9000" data-val="180">
+              <div class="relative w-20 h-20 sm:w-22 sm:h-22 rounded-full volca-acrylic-knob border-2 border-vGold p-1 flex items-center justify-center shadow-lg shadow-red-600/30">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-600 relative flex items-center justify-center">
+                  <div class="absolute top-1.5 w-1.5 h-4 bg-vGold rounded-full shadow-sm"></div>
+                  <div class="w-8 h-8 rounded-full bg-[#121015] border border-neutral-700 flex items-center justify-center">
+                    <span class="text-[9px] text-vGold font-bold">VCF</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">CUTOFF</span>
+              <span class="text-[10px] text-vGold font-bold knob-val-text">180 Hz</span>
+            </div>
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="peak" data-min="0.5" data-max="16" data-val="5.5">
+              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center"><div class="absolute top-1.5 w-1 h-3.5 bg-vRed rounded-full"></div></div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">PEAK (RES)</span>
+              <span class="text-[10px] text-vRed font-bold knob-val-text">5.5</span>
+            </div>
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="delayTime" data-min="0.08" data-max="0.8" data-val="0.32">
+              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center"><div class="absolute top-1.5 w-1 h-3.5 bg-vAmber rounded-full"></div></div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">DD-5 TIME</span>
+              <span class="text-[10px] text-vAmber font-bold knob-val-text">320 ms</span>
+            </div>
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="delayFeedback" data-min="0" data-max="0.88" data-val="0.58">
+              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center"><div class="absolute top-1.5 w-1 h-3.5 bg-vAmber rounded-full"></div></div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">DD-5 F.BACK</span>
+              <span class="text-[10px] text-vAmber font-bold knob-val-text">58%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Knobs & Mixer ... -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="space" data-min="0" data-max="1" data-val="0.65">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">RV-6 REVERB</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center"><div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center"><div class="absolute top-1 w-1 h-2.5 bg-vTeal rounded-full"></div></div></div>
+            <span class="text-xs font-bold text-vTeal mt-1.5 knob-val-text">65%</span>
+          </div>
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="chordSustain" data-min="0.2" data-max="1" data-val="0.85">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">СУСТЕЙН</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center"><div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center"><div class="absolute top-1 w-1 h-2.5 bg-vGold rounded-full"></div></div></div>
+            <span class="text-xs font-bold text-vGold mt-1.5 knob-val-text">85%</span>
+          </div>
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="bpm" data-min="45" data-max="110" data-val="68">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">TEMPO (BPM)</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center"><div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center"><div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div></div></div>
+            <span class="text-xs font-bold text-white mt-1.5 knob-val-text">68 BPM</span>
+          </div>
+          <div class="bg-black/40 border border-white/20 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="masterVol" data-min="0" data-max="1" data-val="0.80">
+            <span class="text-[10px] text-white uppercase tracking-wider mb-1 font-bold">MASTER</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-400 flex items-center justify-center"><div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center"><div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div></div></div>
+            <span class="text-xs font-bold text-white mt-1.5 knob-val-text">80%</span>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Mutes & Play -->
+    <div class="border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <button id="muteBassBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vTeal bg-vTeal/15 text-vTeal font-bold transition"><span class="w-2 h-2 rounded-full bg-vTeal"></span><span>1: БАС И АККОРДЫ</span></button>
+        <button id="muteArpBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vGold bg-vGold/15 text-vGold font-bold transition"><span class="w-2 h-2 rounded-full bg-vGold"></span><span>2: АРПЕДЖИО</span></button>
+        <button id="muteAccentBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vRed bg-vRed/15 text-vRed font-bold transition"><span class="w-2 h-2 rounded-full bg-vRed"></span><span>3: АКЦЕНТЫ</span></button>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="playBtn" class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-vGold to-vAmber text-black font-volca font-bold text-sm tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition"><span id="playIcon">▶</span><span id="playText">PLAY FLUX LOOP</span></button>
+        <button id="stopBtn" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs active:scale-95 transition">■ STOP</button>
+      </div>
+    </div>
+
   </main>
 
   <script>
   (function() {
     'use strict';
 
-    // --- State & Settings ---
     const STATE = {
       isPlaying: false,
-      bpm: 78,
-      swing: 0.28,
-      masterVolume: 0.85,
-      selectedKey: 'AUTO',
-      currentKeyName: 'A Minor',
-      currentScaleRoot: 57, // A3
-      currentScaleNotes: [57, 60, 62, 64, 67, 69, 72, 74], // Pentatonic MIDI
-      pomoSeconds: 25 * 60,
-      pomoRunning: false,
-      pomoTimerId: null,
-      secondsPlayed: 0,
-      tapeTimerId: null,
-      currentProgression: [],
-      currentProgressionIndex: 0,
-      activeNotesVisual: [],
-      autoSolo: true,
-      soloTimbre: 'guitar',
-      keysTimbre: 'rhodes',
-      bassTimbre: 'upright',
-      drumTimbre: 'boombap'
+      currentTick128: 0,
+      bpm: 68,
+      cutoff: 180,
+      peak: 5.5,
+      delayTime: 0.32,
+      delayFeedback: 0.58,
+      spaceAmount: 0.65,
+      chordSustain: 0.85,
+      masterVol: 0.80, bassVol: 0.30, arpVol: 0.75, accentVol: 0.60,
+      bassActive: true, arpActive: true, accentActive: true,
+
+      arpFollowMode: true, // true = transpose pattern, false = fixed absolute notes
+
+      bassChords: [
+        { name: "D MINOR",  rootMidi: 38, triad: [50, 53, 57], root: "D",  quality: "m" },
+        { name: "Bb MAJOR", rootMidi: 34, triad: [46, 50, 53], root: "Bb", quality: "M" },
+        { name: "F MAJOR",  rootMidi: 41, triad: [41, 48, 53], root: "F",  quality: "M" },
+        { name: "C MAJOR",  rootMidi: 36, triad: [48, 52, 55], root: "C",  quality: "M" }
+      ],
+
+      // Исходные абсолютные ноты для арпеджио (D4, F4, A4, C5, E5)
+      arpNotes: [62, 65, 69, 72, 76],
+      arpStepTickInterval: 2,
+      arpIndex: 0,
+      accentMask: [0, 0, 1, 1, 0, 0, 0, 0]
     };
 
-    // Note Names helper
-    const NOTE_NAMES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-    function midiToName(midi) {
-      const name = NOTE_NAMES[midi % 12];
-      const oct = Math.floor(midi / 12) - 1;
-      return `${name}${oct}`;
-    }
-
-    // Helper: MIDI note number to frequency
-    function mtof(midi) {
-      return 440 * Math.pow(2, (midi - 69) / 12);
-    }
-
-    // --- Web Audio Graph Variables ---
-    let actx = null;
-    let masterFilter = null;
-    let masterDrive = null;
-    let masterGain = null;
-    let masterMuteGain = null; // Instantly mutes ALL sound on stop/pause
-    let masterCompressor = null;
-    let analyser = null;
-
-    // Submix Busses
-    let keysGain = null;
-    let bassGain = null;
-    let drumGain = null;
-    let leadGain = null;
-    let leadFilter = null; // Dedicated warm filter for solo
-    let leadDelay = null;
-    let leadDelayGain = null;
-    let vinylGain = null;
-    let rainGain = null;
-    let wobbleLfo = null;
-    let wobbleGain = null;
-
-    // Ambience Delay
-    let delayNode = null;
-    let delayGain = null;
-
-    // Procedural Noise Sources
-    let vinylNode = null;
-    let rainNode = null;
-
-    const CHANNELS = {
-      keys: { getGain: () => keysGain, sliderId: 'keysVol', valId: 'keysVolVal', muteBtnId: 'keysMuteBtn', vol: 0.85, muted: false },
-      bass: { getGain: () => bassGain, sliderId: 'bassVol', valId: 'bassVolVal', muteBtnId: 'bassMuteBtn', vol: 0.80, muted: false },
-      drum: { getGain: () => drumGain, sliderId: 'drumVol', valId: 'drumVolVal', muteBtnId: 'drumMuteBtn', vol: 0.75, muted: false },
-      lead: { getGain: () => leadGain, sliderId: 'leadVol', valId: 'leadVolVal', muteBtnId: 'leadMuteBtn', vol: 0.48, muted: false },
-      vinyl: { getGain: () => vinylGain, sliderId: 'vinylVol', valId: 'vinylVolVal', muteBtnId: 'vinylMuteBtn', vol: 0.45, muted: false },
-      rain: { getGain: () => rainGain, sliderId: 'rainVol', valId: 'rainVolVal', muteBtnId: 'rainMuteBtn', vol: 0.35, muted: false }
+    const NOTE_NAMES_ARR = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const ROOT_MIDI_MAP = {
+      'C': 36, 'C#': 37, 'D': 38, 'Eb': 39, 'E': 40, 'F': 41, 
+      'F#': 42, 'G': 43, 'Ab': 44, 'A': 45, 'Bb': 34, 'B': 35
     };
 
-    function updateChannelGain(name) {
-      const ch = CHANNELS[name];
-      if (!ch) return;
-      const targetGain = ch.muted ? 0 : ch.vol;
-      const node = ch.getGain();
-      if (node && actx) {
-        node.gain.cancelScheduledValues(actx.currentTime);
-        node.gain.setValueAtTime(node.gain.value, actx.currentTime);
-        node.gain.linearRampToValueAtTime(targetGain, actx.currentTime + 0.03);
+    function midiToNoteName(m) {
+      const oct = Math.floor(m / 12) - 1;
+      return `${NOTE_NAMES_ARR[m % 12]}${oct}`;
+    }
+
+    function mtof(m) {
+      return 440 * Math.pow(2, (m - 69) / 12);
+    }
+
+    // --- НОВАЯ ЛОГИКА АРПЕДЖИО: Транспонирование абсолютных нот ---
+    function computeArpMotif(chord) {
+      if (!STATE.arpFollowMode) {
+        return STATE.arpNotes; // Играет точно те ноты, что выбраны в редакторе (Остинато)
       }
+
+      // Если "Следовать за аккордом", берем разницу между корнем текущего аккорда и первого
+      const baseRoot = STATE.bassChords[0].rootMidi;
+      let currentRoot = chord.rootMidi;
+      let delta = currentRoot - baseRoot;
+      
+      // Сворачиваем транспонирование в рамки -5...+6 полутонов, чтобы паттерн не улетал слишком высоко/низко
+      while (delta > 6) delta -= 12;
+      while (delta < -5) delta += 12;
+
+      // Параллельно сдвигаем весь выбранный паттерн нот
+      return STATE.arpNotes.map(n => n + delta);
     }
+
+    // Чистые обертоны для колокольчиков (Тоника или Квинта аккорда в 5-6 октаве)
+    function computeHarmonicAccentNote(chord) {
+      let root = chord.rootMidi;
+      while (root < 72) root += 12;
+      const validTones = [root, root + 7, root + 12];
+      return validTones[Math.floor(Math.random() * validTones.length)];
+    }
+
+    // --- Audio System ---
+    let actx = null, masterMuteGain = null, masterGain = null, vcfFilter = null;
+    let bassBusGain = null, arpBusGain = null, accentBusGain = null;
+    let dd5DelayL = null, dd5DelayR = null, dd5FeedbackL = null, dd5FeedbackR = null, dd5Filter = null;
+    let rv6Reverb = null, rv6Gain = null;
+    let timerId = null, nextTickTime = 0;
 
     function initAudio() {
       if (actx) return;
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       actx = new AudioContext();
 
-      analyser = actx.createAnalyser();
-      analyser.fftSize = 128;
+      masterMuteGain = actx.createGain(); masterMuteGain.gain.value = 0;
+      masterGain = actx.createGain(); masterGain.gain.value = STATE.masterVol;
+      bassBusGain = actx.createGain(); bassBusGain.gain.value = STATE.bassActive ? STATE.bassVol : 0;
+      arpBusGain = actx.createGain(); arpBusGain.gain.value = STATE.arpActive ? STATE.arpVol : 0;
+      accentBusGain = actx.createGain(); accentBusGain.gain.value = STATE.accentActive ? STATE.accentVol : 0;
 
-      // Master Mute (Safety gate for Stop/Pause)
-      masterMuteGain = actx.createGain();
-      masterMuteGain.gain.setValueAtTime(0.0, actx.currentTime);
+      vcfFilter = actx.createBiquadFilter();
+      vcfFilter.type = 'lowpass';
+      vcfFilter.frequency.value = STATE.cutoff;
+      vcfFilter.Q.value = STATE.peak;
 
-      // Master Volume
-      masterGain = actx.createGain();
-      masterGain.gain.setValueAtTime(STATE.masterVolume, actx.currentTime);
+      bassBusGain.connect(vcfFilter); arpBusGain.connect(vcfFilter); accentBusGain.connect(vcfFilter);
 
-      // Master Warmth Lowpass Filter
-      masterFilter = actx.createBiquadFilter();
-      masterFilter.type = 'lowpass';
-      const initialCutoff = parseInt(document.getElementById('filterCutoff').value) || 3800;
-      masterFilter.frequency.setValueAtTime(initialCutoff, actx.currentTime);
-      masterFilter.Q.setValueAtTime(0.7, actx.currentTime);
+      dd5DelayL = actx.createDelay(); dd5DelayR = actx.createDelay();
+      dd5DelayL.delayTime.value = STATE.delayTime; dd5DelayR.delayTime.value = STATE.delayTime * 1.33;
+      dd5FeedbackL = actx.createGain(); dd5FeedbackR = actx.createGain();
+      dd5FeedbackL.gain.value = STATE.delayFeedback; dd5FeedbackR.gain.value = STATE.delayFeedback;
+      dd5Filter = actx.createBiquadFilter(); dd5Filter.type = 'lowpass'; dd5Filter.frequency.value = 4200;
 
-      // Master Tape Saturation
-      masterDrive = actx.createWaveShaper();
-      const initialDrive = parseFloat(document.getElementById('driveAmount').value) || 0.25;
-      makeDistortionCurve(initialDrive);
+      dd5DelayL.connect(dd5FeedbackL); dd5FeedbackL.connect(dd5DelayR);
+      dd5DelayR.connect(dd5FeedbackR); dd5FeedbackR.connect(dd5DelayL);
 
-      // Master Tape Glue Compressor
-      masterCompressor = actx.createDynamicsCompressor();
-      masterCompressor.threshold.setValueAtTime(-14, actx.currentTime);
-      masterCompressor.knee.setValueAtTime(8, actx.currentTime);
-      masterCompressor.ratio.setValueAtTime(4, actx.currentTime);
-      masterCompressor.attack.setValueAtTime(0.02, actx.currentTime);
-      masterCompressor.release.setValueAtTime(0.2, actx.currentTime);
+      initRV6Reverb();
 
-      // Ambient Ping-Pong Delay
-      delayNode = actx.createDelay();
-      delayNode.delayTime.setValueAtTime(0.38, actx.currentTime);
-      delayGain = actx.createGain();
-      delayGain.gain.setValueAtTime(0.28, actx.currentTime);
-      delayNode.connect(delayGain);
-      delayGain.connect(delayNode);
-      delayGain.connect(masterFilter);
-
-      // Dedicated Solo Lead Tape Delay & Warmth Filter
-      leadFilter = actx.createBiquadFilter();
-      leadFilter.type = 'lowpass';
-      leadFilter.frequency.setValueAtTime(2400, actx.currentTime);
-      leadFilter.Q.setValueAtTime(0.6, actx.currentTime);
-
-      leadDelay = actx.createDelay();
-      leadDelay.delayTime.setValueAtTime(0.32, actx.currentTime);
-      leadDelayGain = actx.createGain();
-      leadDelayGain.gain.setValueAtTime(0.35, actx.currentTime);
-      leadDelay.connect(leadDelayGain);
-      leadDelayGain.connect(leadDelay);
-      leadDelayGain.connect(leadFilter);
-
-      // Tape Wow / Flutter Modulation
-      wobbleLfo = actx.createOscillator();
-      wobbleGain = actx.createGain();
-      wobbleLfo.frequency.setValueAtTime(0.55, actx.currentTime);
-      const initialWobble = parseFloat(document.getElementById('wobbleVol').value) || 0.30;
-      wobbleGain.gain.setValueAtTime(initialWobble * 10, actx.currentTime);
-      wobbleLfo.connect(wobbleGain);
-      wobbleLfo.start();
-
-      // Channel Gain Nodes
-      keysGain = actx.createGain();
-      bassGain = actx.createGain();
-      drumGain = actx.createGain();
-      leadGain = actx.createGain();
-      vinylGain = actx.createGain();
-      rainGain = actx.createGain();
-
-      // Apply current slider values & mutes immediately
-      Object.keys(CHANNELS).forEach(updateChannelGain);
-
-      // Routing
-      keysGain.connect(masterFilter);
-      keysGain.connect(delayNode);
-      bassGain.connect(masterFilter);
-      drumGain.connect(masterFilter);
-      
-      // Solo routing: into dedicated warm filter and delay, then into master
-      leadGain.connect(leadFilter);
-      leadGain.connect(leadDelay);
-      leadFilter.connect(masterFilter);
-
-      // Ambience goes into Master Filter for tape color
-      vinylGain.connect(masterFilter);
-      rainGain.connect(masterFilter);
-
-      masterFilter.connect(masterDrive);
-      masterDrive.connect(masterCompressor);
-      masterCompressor.connect(masterGain);
-      masterGain.connect(masterMuteGain);
-      masterMuteGain.connect(analyser);
-      analyser.connect(actx.destination);
-
-      // Start vinyl and rain loops
-      initVinylNoise();
-      initRainNoise();
+      vcfFilter.connect(masterGain); vcfFilter.connect(dd5DelayL); vcfFilter.connect(dd5DelayR);
+      dd5DelayL.connect(dd5Filter); dd5DelayR.connect(dd5Filter);
+      dd5Filter.connect(masterGain); masterGain.connect(masterMuteGain); masterMuteGain.connect(actx.destination);
     }
 
-    function makeDistortionCurve(amount) {
-      const k = typeof amount === 'number' ? amount * 50 : 15;
-      const n_samples = 44100;
-      const curve = new Float32Array(n_samples);
-      const deg = Math.PI / 180;
-      for (let i = 0; i < n_samples; ++i) {
-        let x = (i * 2) / n_samples - 1;
-        curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    function initRV6Reverb() {
+      const sampleRate = actx.sampleRate, length = sampleRate * 3.4;
+      const impulse = actx.createBuffer(2, length, sampleRate);
+      for (let i = 0; i < length; i++) {
+        const decay = Math.exp(-i / (sampleRate * 1.15)), mod = Math.sin(i * 0.004) * 0.05;
+        impulse.getChannelData(0)[i] = ((Math.random() * 2 - 1) + mod) * decay;
+        impulse.getChannelData(1)[i] = ((Math.random() * 2 - 1) - mod) * decay;
       }
-      if (masterDrive) masterDrive.curve = curve;
+      rv6Reverb = actx.createConvolver(); rv6Reverb.buffer = impulse;
+      rv6Gain = actx.createGain(); rv6Gain.gain.value = STATE.spaceAmount * 0.75;
+      vcfFilter.connect(rv6Reverb); dd5Filter.connect(rv6Reverb);
+      rv6Reverb.connect(rv6Gain); rv6Gain.connect(masterGain);
     }
 
-    function initVinylNoise() {
-      const bufferSize = actx.sampleRate * 5;
-      const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
-      const output = buffer.getChannelData(0);
-      let lastOut = 0.0;
+    // Synths...
+    function triggerChordSustain(chord, time, duration) {
+      if (!actx || !STATE.bassActive) return;
+      const subFreq = mtof(chord.rootMidi), subOsc = actx.createOscillator(), subSaw = actx.createOscillator(), subGain = actx.createGain();
+      subOsc.type = 'triangle'; subSaw.type = 'sawtooth';
+      subOsc.frequency.setValueAtTime(subFreq, time); subSaw.frequency.setValueAtTime(subFreq, time);
+      subGain.gain.setValueAtTime(0.001, time);
+      subGain.gain.linearRampToValueAtTime(0.24, time + 0.08);
+      subGain.gain.exponentialRampToValueAtTime(0.15, time + duration * 0.75);
+      subGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      subOsc.connect(subGain); subSaw.connect(subGain); subGain.connect(bassBusGain);
+      subOsc.start(time); subSaw.start(time); subOsc.stop(time + duration); subSaw.stop(time + duration);
 
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + 0.02 * white) / 1.02;
-        lastOut = output[i];
-        output[i] *= 0.15;
-        if (Math.random() < 0.0004) {
-          output[i] += (Math.random() - 0.5) * 0.8;
-        }
-      }
-
-      vinylNode = actx.createBufferSource();
-      vinylNode.buffer = buffer;
-      vinylNode.loop = true;
-
-      const vinylFilter = actx.createBiquadFilter();
-      vinylFilter.type = 'bandpass';
-      vinylFilter.frequency.setValueAtTime(1400, actx.currentTime);
-      vinylFilter.Q.setValueAtTime(0.8, actx.currentTime);
-
-      vinylNode.connect(vinylFilter);
-      vinylFilter.connect(vinylGain);
-      vinylNode.start();
-    }
-
-    function initRainNoise() {
-      const bufferSize = actx.sampleRate * 4;
-      const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
-      const data = buffer.getChannelData(0);
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0;
-
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.96900 * b2 + white * 0.1538520;
-        b3 = 0.86650 * b3 + white * 0.3104856;
-        b4 = 0.55000 * b4 + white * 0.5329522;
-        data[i] = (b0 + b1 + b2 + b3 + b4) * 0.035;
-      }
-
-      rainNode = actx.createBufferSource();
-      rainNode.buffer = buffer;
-      rainNode.loop = true;
-
-      const rainFilter = actx.createBiquadFilter();
-      rainFilter.type = 'lowpass';
-      rainFilter.frequency.setValueAtTime(1800, actx.currentTime);
-
-      rainNode.connect(rainFilter);
-      rainFilter.connect(rainGain);
-      rainNode.start();
-    }
-
-    function playKeysNote(midiNote, time, duration = 1.8, velocity = 0.7) {
-      if (!actx) return;
-      const freq = mtof(midiNote);
-      const timbre = STATE.keysTimbre;
-
-      if (timbre === 'pad') {
-        // Soft ambient sine pad
-        const osc = actx.createOscillator();
-        const env = actx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, time);
-        if (wobbleGain) wobbleGain.connect(osc.frequency);
-
-        env.gain.setValueAtTime(0.0001, time);
-        env.gain.linearRampToValueAtTime(0.25 * velocity, time + 0.15);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(env);
-        env.connect(keysGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.1);
-      } else if (timbre === 'wurlitzer') {
-        // Reed/saw-based Wurlitzer with tremolo
-        const osc = actx.createOscillator();
-        const filter = actx.createBiquadFilter();
-        const env = actx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, time);
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(freq * 3, time);
-
-        env.gain.setValueAtTime(0.001, time);
-        env.gain.linearRampToValueAtTime(0.22 * velocity, time + 0.02);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(filter);
-        filter.connect(env);
-        env.connect(keysGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.1);
-      } else if (timbre === 'vibes') {
-        // Bell-like high sine with rapid decay
-        const osc = actx.createOscillator();
-        const env = actx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq * 2, time);
-        env.gain.setValueAtTime(0.001, time);
-        env.gain.linearRampToValueAtTime(0.3 * velocity, time + 0.01);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration * 0.7);
-
-        osc.connect(env);
-        env.connect(keysGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.1);
-      } else {
-        // Default FM Rhodes Piano
-        const carrier = actx.createOscillator();
-        carrier.type = 'sine';
-        carrier.frequency.setValueAtTime(freq, time);
-        if (wobbleGain) wobbleGain.connect(carrier.frequency);
-
-        const modulator = actx.createOscillator();
-        modulator.type = 'sine';
-        modulator.frequency.setValueAtTime(freq * 2, time);
-
-        const modGain = actx.createGain();
-        modGain.gain.setValueAtTime(freq * 0.8 * velocity, time);
-        modGain.gain.exponentialRampToValueAtTime(0.01, time + duration * 0.6);
-
-        modulator.connect(modGain);
-        modGain.connect(carrier.frequency);
-
-        const env = actx.createGain();
-        env.gain.setValueAtTime(0.001, time);
-        env.gain.linearRampToValueAtTime(0.38 * velocity, time + 0.015);
-        env.gain.exponentialRampToValueAtTime(0.18 * velocity, time + 0.3);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        carrier.connect(env);
-        env.connect(keysGain);
-
-        carrier.start(time);
-        modulator.start(time);
-        carrier.stop(time + duration + 0.1);
-        modulator.stop(time + duration + 0.1);
-      }
-
-      registerVisualNote(midiNote, 'keys', duration);
-    }
-
-    function playBassNote(midiNote, time, duration = 1.0, velocity = 0.8) {
-      if (!actx) return;
-      const freq = mtof(midiNote);
-      const timbre = STATE.bassTimbre;
-
-      const osc = actx.createOscillator();
-      const env = actx.createGain();
-
-      if (timbre === 'sub') {
-        // Deep 808 Sine Sub
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, time);
-        env.gain.setValueAtTime(0.001, time);
-        env.gain.linearRampToValueAtTime(0.7 * velocity, time + 0.03);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      } else if (timbre === 'analog') {
-        // Moog Saw Bass with lowpass envelope
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, time);
-        const filter = actx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(freq * 4, time);
-        filter.frequency.exponentialRampToValueAtTime(freq * 1.5, time + duration);
-
-        env.gain.setValueAtTime(0.001, time);
-        env.gain.linearRampToValueAtTime(0.4 * velocity, time + 0.02);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(filter);
-        filter.connect(env);
-        env.connect(bassGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.05);
-        registerVisualNote(midiNote, 'bass', duration);
-        return;
-      } else {
-        // Default Upright Double Bass (triangle with pluck decay)
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq * 1.04, time);
-        osc.frequency.exponentialRampToValueAtTime(freq, time + 0.05);
-        env.gain.setValueAtTime(0.001, time);
-        env.gain.linearRampToValueAtTime(0.55 * velocity, time + 0.02);
-        env.gain.exponentialRampToValueAtTime(0.3 * velocity, time + duration * 0.5);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      }
-
-      osc.connect(env);
-      env.connect(bassGain);
-      osc.start(time);
-      osc.stop(time + duration + 0.05);
-      registerVisualNote(midiNote, 'bass', duration);
-    }
-
-    function playKick(time, velocity = 0.9) {
-      if (!actx) return;
-      const osc = actx.createOscillator();
-      const gain = actx.createGain();
-
-      if (STATE.drumTimbre === 'trap808') {
-        osc.frequency.setValueAtTime(90, time);
-        osc.frequency.exponentialRampToValueAtTime(36, time + 0.18);
-        gain.gain.setValueAtTime(1.0 * velocity, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.45);
-      } else {
-        // Classic punchy boom-bap / dusty kick
-        osc.frequency.setValueAtTime(STATE.drumTimbre === 'dusty' ? 95 : 120, time);
-        osc.frequency.exponentialRampToValueAtTime(42, time + 0.08);
-        gain.gain.setValueAtTime(0.95 * velocity, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.26);
-      }
-
-      osc.connect(gain);
-      gain.connect(drumGain);
-      osc.start(time);
-      osc.stop(time + 0.46);
-      registerVisualNote(36, 'drum', 0.15);
-    }
-
-    function playSnare(time, velocity = 0.8) {
-      if (!actx) return;
-      const osc = actx.createOscillator();
-      const oscGain = actx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(170, time);
-      osc.frequency.exponentialRampToValueAtTime(75, time + 0.08);
-      oscGain.gain.setValueAtTime(0.35 * velocity, time);
-      oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
-      osc.connect(oscGain);
-      oscGain.connect(drumGain);
-      osc.start(time);
-      osc.stop(time + 0.14);
-
-      // Snare Noise Snap
-      const bufferSize = actx.sampleRate * 0.16;
-      const noiseBuffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      const noise = actx.createBufferSource();
-      noise.buffer = noiseBuffer;
-      const filter = actx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(STATE.drumTimbre === 'dusty' ? 800 : 1200, time);
-
-      const noiseGain = actx.createGain();
-      noiseGain.gain.setValueAtTime(0.55 * velocity, time);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
-
-      noise.connect(filter);
-      filter.connect(noiseGain);
-      noiseGain.connect(drumGain);
-      noise.start(time);
-      noise.stop(time + 0.18);
-      registerVisualNote(38, 'drum', 0.15);
-    }
-
-    function playHiHat(time, isOpen = false, velocity = 0.6) {
-      if (!actx) return;
-      const dur = isOpen ? 0.32 : 0.06;
-      const bufferSize = Math.floor(actx.sampleRate * dur);
-      const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      const noise = actx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = actx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(STATE.drumTimbre === 'dusty' ? 6000 : 7800, time);
-
-      const gain = actx.createGain();
-      gain.gain.setValueAtTime(0.4 * velocity, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(drumGain);
-      noise.start(time);
-      noise.stop(time + dur + 0.02);
-      registerVisualNote(42, 'drum', 0.08);
-    }
-
-    function playSoloNote(midiNote, time, duration = 0.65, velocity = 0.65, graceSlide = true) {
-      if (!actx) return;
-      const targetFreq = mtof(midiNote);
-      const startFreq = graceSlide ? mtof(midiNote - (Math.random() > 0.5 ? 2 : 1)) : targetFreq;
-      const timbre = STATE.soloTimbre;
-
-      if (timbre === 'guitar') {
-        // Plucked acoustic nylon guitar with gentle micro-slide and warm body
-        const osc = actx.createOscillator();
-        const filter = actx.createBiquadFilter();
-        const env = actx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(startFreq, time);
-        if (graceSlide) {
-          osc.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.045);
-        }
-        if (wobbleGain) wobbleGain.connect(osc.frequency);
-
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(targetFreq * 2.8, time);
-        filter.frequency.exponentialRampToValueAtTime(targetFreq * 0.9, time + duration);
-
-        env.gain.setValueAtTime(0.0001, time);
-        env.gain.linearRampToValueAtTime(0.35 * velocity, time + 0.02);
-        env.gain.exponentialRampToValueAtTime(0.12 * velocity, time + 0.22);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(filter);
-        filter.connect(env);
-        env.connect(leadGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.05);
-
-      } else if (timbre === 'trumpet') {
-        // Muted jazz trumpet with subtle vibrato
-        const osc = actx.createOscillator();
-        const filter = actx.createBiquadFilter();
-        const env = actx.createGain();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(startFreq, time);
-        if (graceSlide) {
-          osc.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.06);
-        }
-        if (wobbleGain) wobbleGain.connect(osc.frequency);
-
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1200, time);
-        filter.Q.setValueAtTime(2.6, time);
-
-        // Delayed vibrato
-        const vibrato = actx.createOscillator();
-        const vibGain = actx.createGain();
-        vibrato.frequency.setValueAtTime(4.8, time);
-        vibGain.gain.setValueAtTime(0.001, time);
-        vibGain.gain.linearRampToValueAtTime(3.5, time + 0.2);
-        vibrato.connect(vibGain);
-        vibGain.connect(osc.frequency);
-        vibrato.start(time + 0.1);
-        vibrato.stop(time + duration);
-
-        env.gain.setValueAtTime(0.0001, time);
-        env.gain.linearRampToValueAtTime(0.24 * velocity, time + 0.05);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(filter);
-        filter.connect(env);
-        env.connect(leadGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.05);
-
-      } else if (timbre === 'flute') {
-        // Soft breathy flute with organic swell
-        const osc = actx.createOscillator();
-        const env = actx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(startFreq, time);
-        if (graceSlide) {
-          osc.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.05);
-        }
-
-        const vibrato = actx.createOscillator();
-        const vibGain = actx.createGain();
-        vibrato.frequency.setValueAtTime(5.2, time);
-        vibGain.gain.setValueAtTime(0.001, time);
-        vibGain.gain.linearRampToValueAtTime(3.0, time + 0.15);
-        vibrato.connect(vibGain);
-        vibGain.connect(osc.frequency);
-        vibrato.start(time + 0.1);
-        vibrato.stop(time + duration);
-
-        env.gain.setValueAtTime(0.0001, time);
-        env.gain.linearRampToValueAtTime(0.28 * velocity, time + 0.08);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(env);
-        env.connect(leadGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.05);
-
-      } else {
-        // Warm vintage analog sine lead with soft round attack
-        const osc = actx.createOscillator();
-        const env = actx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(startFreq, time);
-        if (graceSlide) {
-          osc.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.04);
-        }
-        if (wobbleGain) wobbleGain.connect(osc.frequency);
-
-        env.gain.setValueAtTime(0.0001, time);
-        env.gain.linearRampToValueAtTime(0.28 * velocity, time + 0.04);
-        env.gain.exponentialRampToValueAtTime(0.12 * velocity, time + duration * 0.45);
-        env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-
-        osc.connect(env);
-        env.connect(leadGain);
-        osc.start(time);
-        osc.stop(time + duration + 0.05);
-      }
-
-      registerVisualNote(midiNote, 'lead', duration);
-    }
-
-    function registerVisualNote(midiNote, type, duration) {
-      STATE.activeNotesVisual.push({
-        midi: midiNote,
-        type: type,
-        startTime: performance.now(),
-        duration: duration * 1000
+      chord.triad.forEach((mid, idx) => {
+        const osc = actx.createOscillator(), g = actx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(mtof(mid), time); osc.detune.setValueAtTime((idx - 1) * 7, time);
+        g.gain.setValueAtTime(0.0001, time);
+        g.gain.linearRampToValueAtTime(0.18 * STATE.chordSustain, time + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.10 * STATE.chordSustain, time + duration * 0.8);
+        g.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+        osc.connect(g); g.connect(bassBusGain); osc.start(time); osc.stop(time + duration);
       });
     }
 
-    // Root keys database
-    const KEYS_DB = [
-      { name: "A Minor / C Major", root: 57, baseScale: [57, 60, 62, 64, 67, 69, 72, 74] },
-      { name: "D Minor / F Major", root: 50, baseScale: [50, 53, 55, 57, 60, 62, 65, 67] },
-      { name: "E Minor / G Major", root: 52, baseScale: [52, 55, 57, 59, 62, 64, 67, 69] },
-      { name: "C Minor / Eb Major", root: 48, baseScale: [48, 51, 53, 55, 58, 60, 63, 65] },
-      { name: "G Minor / Bb Major", root: 55, baseScale: [55, 58, 60, 62, 65, 67, 70, 72] },
-      { name: "B Minor / D Major", root: 59, baseScale: [59, 62, 64, 66, 69, 71, 74, 76] }
-    ];
-
-    // Harmonic Lo-Fi Jazz Formulas (Roman Numeral structures)
-    const HARMONY_PATTERNS = [
-      {
-        name: "Neo-Soul ii - V - I - VI",
-        chords: [
-          { degree: 2, label: "ii9", intervals: [0, 3, 7, 10, 14], bassOffset: 2 },
-          { degree: 7, label: "V13", intervals: [0, 4, 10, 14, 21], bassOffset: 7 },
-          { degree: 0, label: "Imaj9", intervals: [0, 4, 7, 11, 14], bassOffset: 0 },
-          { degree: 9, label: "VI7#9", intervals: [0, 4, 10, 15], bassOffset: 9 }
-        ]
-      },
-      {
-        name: "Lofi Rain IV - iii - ii - I",
-        chords: [
-          { degree: 5, label: "IVmaj9", intervals: [0, 4, 7, 11, 14], bassOffset: 5 },
-          { degree: 4, label: "iii7", intervals: [0, 3, 7, 10, 14], bassOffset: 4 },
-          { degree: 2, label: "ii9", intervals: [0, 3, 7, 10, 14], bassOffset: 2 },
-          { degree: 0, label: "Imaj7", intervals: [0, 4, 7, 11], bassOffset: 0 }
-        ]
-      },
-      {
-        name: "Midnight Drift i - VI - III - VII",
-        chords: [
-          { degree: 0, label: "i(m9)", intervals: [0, 3, 7, 10, 14], bassOffset: 0 },
-          { degree: 8, label: "VImaj7", intervals: [0, 4, 7, 11, 14], bassOffset: 8 },
-          { degree: 3, label: "IIImaj9", intervals: [0, 4, 7, 11], bassOffset: 3 },
-          { degree: 10, label: "VII7", intervals: [0, 4, 10, 14], bassOffset: 10 }
-        ]
-      },
-      {
-        name: "Tokyo Cafe I - vi - ii - V",
-        chords: [
-          { degree: 0, label: "Imaj9", intervals: [0, 4, 7, 11, 14], bassOffset: 0 },
-          { degree: 9, label: "vi7", intervals: [0, 3, 7, 10, 14], bassOffset: 9 },
-          { degree: 2, label: "ii9", intervals: [0, 3, 7, 10, 14], bassOffset: 2 },
-          { degree: 7, label: "V7b9", intervals: [0, 4, 10, 13], bassOffset: 7 }
-        ]
-      }
-    ];
-
-    let currentPatternIdx = -1;
-
-    function generateNewHarmony(forceNext = true) {
-      // 1. Pick or respect Key
-      let keyObj;
-      if (STATE.selectedKey === 'AUTO') {
-        const randomIdx = Math.floor(Math.random() * KEYS_DB.length);
-        keyObj = KEYS_DB[randomIdx];
-      } else {
-        keyObj = KEYS_DB.find(k => k.name.startsWith(STATE.selectedKey)) || KEYS_DB[0];
-      }
-
-      STATE.currentKeyName = keyObj.name;
-      STATE.currentScaleRoot = keyObj.root;
-      STATE.currentScaleNotes = keyObj.baseScale;
-
-      // 2. Pick next progression pattern
-      currentPatternIdx = (currentPatternIdx + 1) % HARMONY_PATTERNS.length;
-      const pattern = HARMONY_PATTERNS[currentPatternIdx];
-
-      // Build real chord objects from scale root
-      const newChords = pattern.chords.map(c => {
-        const rootMidi = keyObj.root + c.degree;
-        // Bass down an octave (between 28 and 42)
-        let bassMidi = rootMidi - 24;
-        while (bassMidi < 28) bassMidi += 12;
-        while (bassMidi > 42) bassMidi -= 12;
-
-        const noteLabel = `${NOTE_NAMES[rootMidi % 12]} ${c.label}`;
-        return {
-          label: noteLabel,
-          root: rootMidi,
-          intervals: c.intervals,
-          bass: bassMidi
-        };
-      });
-
-      STATE.currentProgression = newChords;
-      STATE.currentProgressionIndex = 0;
-
-      // Randomize relaxed BPM slightly (72 to 84)
-      const randomBpm = 72 + Math.floor(Math.random() * 14);
-      STATE.bpm = randomBpm;
-      document.getElementById('bpmInput').value = randomBpm;
-      document.getElementById('bpmValue').innerText = randomBpm;
-
-      // Update UI displays
-      document.getElementById('currentKeyDisplay').innerText = STATE.currentKeyName;
-      document.getElementById('chordProgressDisplay').innerText = pattern.name;
-
-      // Update Jam Pad note labels
-      updateJamPadsUI();
-
-      // If already playing, seamlessly restart bar count
-      if (STATE.isPlaying && actx) {
-        currentStepInBar = 0;
-        currentBarNumber = 0;
-        nextBarTime = actx.currentTime + 0.03;
-      }
+    function triggerBassPulse(midi, time) {
+      if (!actx || !STATE.bassActive) return;
+      const osc = actx.createOscillator(), env = actx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(mtof(midi), time);
+      env.gain.setValueAtTime(0.0001, time);
+      env.gain.linearRampToValueAtTime(0.12, time + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+      osc.connect(env); env.connect(bassBusGain); osc.start(time); osc.stop(time + 0.19);
     }
 
-    function updateJamPadsUI() {
-      const padButtons = document.querySelectorAll('.solo-pad');
-      padButtons.forEach((btn, idx) => {
-        const noteMidi = STATE.currentScaleNotes[idx % STATE.currentScaleNotes.length];
-        const nameSpan = btn.querySelector('.note-name');
-        if (nameSpan) {
-          nameSpan.innerText = midiToName(noteMidi);
-        }
-      });
-      document.getElementById('scaleNotesDisplay').innerText = 
-        STATE.currentScaleNotes.slice(0, 5).map(m => NOTE_NAMES[m % 12]).join(' - ');
+    function triggerArpNote(midi, time) {
+      if (!actx || !STATE.arpActive) return;
+      const osc = actx.createOscillator(), env = actx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(mtof(midi), time);
+      env.gain.setValueAtTime(0.0001, time);
+      env.gain.linearRampToValueAtTime(0.36, time + 0.006);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.34);
+      osc.connect(env); env.connect(arpBusGain); osc.start(time); osc.stop(time + 0.36);
     }
 
-    let nextBarTime = 0;
-    let schedulerTimerId = null;
-    let currentStepInBar = 0; // 16 steps per bar
-    let currentBarNumber = 0;
-    let currentChordData = null;
-
-    // Solo Phrasing State: remembers current motif position & previous note for smooth step-wise motion
-    let lastSoloNote = null;
-    let soloPhraseActive = false;
-    let soloNotesRemainingInPhrase = 0;
-
-    function getChordHarmonicNotes() {
-      if (!currentChordData) return STATE.currentScaleNotes;
-      // Extract specific chord tones (root + 3rd, 5th, 7th, 9th)
-      const root = currentChordData.root;
-      const chordTones = currentChordData.intervals.map(iv => root + iv);
-      // Lift to octave 4-5 for melodic soloing (between 60 and 81)
-      const leadChordTones = [];
-      chordTones.forEach(n => {
-        let note = n;
-        while (note < 62) note += 12;
-        while (note > 81) note -= 12;
-        leadChordTones.push(note);
-      });
-      return leadChordTones;
+    function triggerAccentNote(midi, time) {
+      if (!actx || !STATE.accentActive) return;
+      const osc = actx.createOscillator(), env = actx.createGain();
+      osc.type = 'square'; osc.frequency.setValueAtTime(mtof(midi), time);
+      env.gain.setValueAtTime(0.0001, time);
+      env.gain.linearRampToValueAtTime(0.24, time + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.14);
+      osc.connect(env); env.connect(accentBusGain); osc.start(time); osc.stop(time + 0.15);
     }
 
-    function getNextSoloNote(isStrongBeat) {
-      const chordTones = getChordHarmonicNotes();
-      const scaleNotes = STATE.currentScaleNotes.map(n => n >= 60 ? n : n + 12);
-
-      // On strong beats (0, 4, 8, 12), heavily favor chord tones (consonant jazz resolution)
-      const candidates = isStrongBeat ? chordTones : scaleNotes;
-
-      if (!lastSoloNote) {
-        // First note: pick a sweet chord tone (root, 3rd, or 9th)
-        lastSoloNote = chordTones[Math.floor(Math.random() * chordTones.length)];
-        return lastSoloNote;
-      }
-
-      // Step-wise motion: pick candidate note closest to the last played note (within 1-4 semitones)
-      const sortedByProximity = [...candidates].sort((a, b) => Math.abs(a - lastSoloNote) - Math.abs(b - lastSoloNote));
-      // Pick among the 3 closest notes with high probability to create singing, coherent melodies
-      const chosen = sortedByProximity[Math.floor(Math.random() * Math.min(3, sortedByProximity.length))];
-      lastSoloNote = chosen;
-      return chosen;
-    }
-
-    function scheduleLoFiStep() {
+    function scheduleFluxEngine() {
       if (!STATE.isPlaying) return;
+      const secPerTick = (60.0 / STATE.bpm) / 8.0, chordDuration = secPerTick * 32.0, lookahead = 0.12;
 
-      const secondsPerBeat = 60.0 / STATE.bpm;
-      const secondsPer16th = secondsPerBeat / 4;
-      const lookahead = 0.12;
+      while (nextTickTime < actx.currentTime + lookahead) {
+        const tick = STATE.currentTick128, playTime = nextTickTime, chordIndex = Math.floor(tick / 32) % 4, currentChord = STATE.bassChords[chordIndex];
 
-      while (nextBarTime < actx.currentTime + lookahead) {
-        const time = nextBarTime;
-        const step = currentStepInBar;
+        if (tick % 32 === 0) triggerChordSustain(currentChord, playTime, chordDuration);
+        if (tick % 4 === 0) triggerBassPulse(currentChord.rootMidi, playTime);
 
-        // Micro-timing Swing on offbeat 16ths
-        let actualTime = time;
-        if (step % 2 === 1) {
-          actualTime += secondsPer16th * STATE.swing;
+        let activeArpNote = null;
+        if (tick % STATE.arpStepTickInterval === 0) {
+          const activeMotif = computeArpMotif(currentChord);
+          activeArpNote = activeMotif[STATE.arpIndex % activeMotif.length];
+          triggerArpNote(activeArpNote, playTime);
+          STATE.arpIndex++;
         }
 
-        // On Bar Start (Step 0)
-        if (step === 0) {
-          const chordIndex = currentBarNumber % STATE.currentProgression.length;
-          currentChordData = STATE.currentProgression[chordIndex];
-          
-          document.getElementById('currentChordName').innerText = 
-            `ТАКТ ${currentBarNumber + 1}: ${currentChordData.label}`;
+        if (STATE.accentMask[tick % 8] === 1) triggerAccentNote(computeHarmonicAccentNote(currentChord), playTime);
 
-          // Play Keys Voicing with gentle humanized strumming
-          currentChordData.intervals.forEach((interval, i) => {
-            const noteMidi = currentChordData.root + interval;
-            const humanOffset = i * 0.012 + (Math.random() - 0.5) * 0.005;
-            const humanVel = 0.65 + Math.random() * 0.16;
-            playKeysNote(noteMidi, actualTime + humanOffset, secondsPerBeat * 3.6, humanVel);
-          });
+        const delayMs = Math.max(0, (playTime - actx.currentTime) * 1000);
+        setTimeout(((t, cIdx, cObj) => () => {
+          document.getElementById('currentTickDisplay').innerText = `TICK: ${String(t).padStart(3, '0')} / 128`;
+          document.getElementById('chordRootDisp').innerText = cObj.name;
+          highlightChordCard(cIdx); highlightBeatLed(Math.floor(t / 8));
+        })(tick, chordIndex, currentChord), delayMs);
 
-          // Play Root Bassline
-          playBassNote(currentChordData.bass, actualTime, secondsPerBeat * 1.8, 0.85);
+        STATE.currentTick128 = (STATE.currentTick128 + 1) % 128;
+        nextTickTime += secPerTick;
+      }
+      timerId = setTimeout(scheduleFluxEngine, 25);
+    }
 
-          // Phrasing Decision: Lo-Fi solos breathe! Phrases occur on bars 2 & 4 or 3 & 4 (call & response)
-          const barIn4 = currentBarNumber % 4;
-          if (barIn4 === 1 || barIn4 === 3) {
-            // High probability of phrase fill in resolution bars
-            soloPhraseActive = Math.random() > 0.25;
-            soloNotesRemainingInPhrase = 3 + Math.floor(Math.random() * 4); // 3-6 notes in phrase
-          } else {
-            // Bars 0 and 2: mostly leave space for the chords or play a tiny 2-note motif
-            soloPhraseActive = Math.random() > 0.60;
-            soloNotesRemainingInPhrase = 2;
-          }
+    // UI Updates
+    function highlightChordCard(activeIdx) {
+      for (let i = 0; i < 4; i++) {
+        const card = document.getElementById(`chord-card-${i}`);
+        if (!card) continue;
+        card.className = (i === activeIdx && STATE.isPlaying) 
+          ? 'chord-box p-3 rounded-xl border-2 border-vGold bg-vGold/25 shadow-md shadow-vGold/25 ring-1 ring-vGold/60 opacity-100 flex flex-col justify-between min-h-[128px] transition-colors duration-150'
+          : 'chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150';
+      }
+    }
+
+    function applyChordChange(idx, root, quality) {
+      const rootMidi = ROOT_MIDI_MAP[root] || 38, thirdOffset = quality === 'm' ? 3 : 4;
+      STATE.bassChords[idx] = { name: `${root} ${quality === 'm' ? 'MINOR' : 'MAJOR'}`, rootMidi: rootMidi, triad: [rootMidi + 12, rootMidi + 12 + thirdOffset, rootMidi + 12 + 7], root: root, quality: quality };
+      document.getElementById(`chord-notes-${idx}`).innerText = `${midiToNoteName(rootMidi)} + ${midiToNoteName(STATE.bassChords[idx].triad[1])} + ${midiToNoteName(STATE.bassChords[idx].triad[2])}`;
+      updateAllArpDisplays();
+    }
+
+    function setupChordSelectors() {
+      document.querySelectorAll('.chord-root-select').forEach(sel => sel.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-chord-idx'));
+        applyChordChange(idx, e.target.value, document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`).value);
+      }));
+      document.querySelectorAll('.chord-type-select').forEach(sel => sel.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-chord-idx'));
+        applyChordChange(idx, document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`).value, e.target.value);
+      }));
+      document.querySelectorAll('.preset-prog-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        e.target.getAttribute('data-prog').split(',').forEach((cStr, idx) => {
+          const isMin = cStr.endsWith('m'), root = isMin ? cStr.slice(0, -1) : cStr, quality = isMin ? 'm' : 'M';
+          document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`).value = root;
+          document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`).value = quality;
+          applyChordChange(idx, root, quality);
+        });
+      }));
+    }
+
+    function updateAllArpDisplays() {
+      STATE.bassChords.forEach((chord, idx) => {
+        const arpEl = document.getElementById(`chord-arp-${idx}`);
+        if (arpEl) arpEl.innerText = computeArpMotif(chord).map(midiToNoteName).join(' ');
+      });
+    }
+
+    // Рендер редактора абсолютных нот арпеджио
+    function renderArpNoteEditor() {
+      const container = document.getElementById('arpNoteEditorsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      STATE.arpNotes.forEach((midiNote, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col gap-1';
+        
+        const label = document.createElement('span');
+        label.className = 'text-[9px] text-neutral-400 text-center';
+        label.innerText = `Шаг ${i + 1}`;
+
+        const select = document.createElement('select');
+        select.className = 'bg-black/80 border border-vTeal/40 hover:border-vTeal text-vTeal text-[12px] font-bold rounded p-1 text-center focus:outline-none';
+        
+        // Диапазон от C3 (48) до B5 (83)
+        for(let m = 48; m <= 83; m++) {
+          const o = document.createElement('option');
+          o.value = m;
+          o.innerText = midiToNoteName(m);
+          if (m === midiNote) o.selected = true;
+          select.appendChild(o);
         }
 
-        // Secondary Bass passing note on step 10 or 12
-        if (step === 10 && Math.random() > 0.4 && currentChordData) {
-          const passing = currentChordData.bass + (Math.random() > 0.5 ? 2 : 7);
-          playBassNote(passing, actualTime, secondsPerBeat * 0.8, 0.7);
-        }
+        select.addEventListener('change', (e) => {
+          STATE.arpNotes[i] = parseInt(e.target.value);
+          updateAllArpDisplays();
+        });
 
-        // Drum Grid (Boom-Bap / Chill Lo-Fi)
-        // Kicks
-        if (step === 0 || (step === 6 && Math.random() > 0.3) || step === 10) {
-          const kickVel = step === 0 ? 0.95 : 0.75 + Math.random() * 0.15;
-          playKick(actualTime, kickVel);
-        }
+        wrapper.appendChild(label);
+        wrapper.appendChild(select);
+        container.appendChild(wrapper);
+      });
+    }
 
-        // Snares (2 and 4 with human pocket offset)
-        if (step === 4 || step === 12) {
-          const lazyOffset = 0.008;
-          playSnare(actualTime + lazyOffset, 0.82 + Math.random() * 0.12);
-        }
+    function renderAccentEditor() {
+      const container = document.getElementById('accentEditorsContainer');
+      if (!container) return; container.innerHTML = '';
+      STATE.accentMask.forEach((val, i) => {
+        const btn = document.createElement('button');
+        btn.className = `h-9 rounded-lg border font-bold text-xs transition flex items-center justify-center ${val === 1 ? 'bg-vRed/30 border-vRed text-vRed shadow-sm' : 'bg-black/40 border-white/10 text-neutral-600 hover:border-white/30'}`;
+        btn.innerText = val === 1 ? 'X' : '-';
+        btn.addEventListener('click', () => { STATE.accentMask[i] = STATE.accentMask[i] === 1 ? 0 : 1; renderAccentEditor(); });
+        container.appendChild(btn);
+      });
+    }
 
-        // Hi-Hats
-        if (step % 2 === 0 || Math.random() > 0.5) {
-          const isAccent = (step % 4 === 0);
-          const hatVel = isAccent ? 0.65 : 0.35 + Math.random() * 0.2;
-          const isOpen = (step === 14 && Math.random() > 0.65);
-          playHiHat(actualTime, isOpen, hatVel);
-        }
+    document.getElementById('arpPresetCarpe').addEventListener('click', () => { STATE.arpNotes = [62, 65, 69, 72, 76]; renderArpNoteEditor(); updateAllArpDisplays(); });
+    document.getElementById('arpPresetSpace').addEventListener('click', () => { STATE.arpNotes = [60, 67, 72, 74, 79]; renderArpNoteEditor(); updateAllArpDisplays(); }); // C, G, C, D, G
+    document.getElementById('accentPresetSync').addEventListener('click', () => { STATE.accentMask = [0, 0, 1, 1, 0, 0, 0, 0]; renderAccentEditor(); });
+    document.getElementById('accentPresetOff').addEventListener('click', () => { STATE.accentMask = [0, 0, 0, 0, 0, 0, 0, 0]; renderAccentEditor(); });
 
-        // Melodic Lo-Fi Auto-Solo Engine (Harmonically grounded with musical syncopation)
-        if (STATE.autoSolo && soloPhraseActive && soloNotesRemainingInPhrase > 0) {
-          // Melodic rhythm grid: syncopated jazz rhythm (steps 2, 4, 6, 9, 11, 14)
-          const isMelodyStep = (step === 2 || step === 4 || step === 6 || step === 8 || step === 11 || step === 14);
-          if (isMelodyStep && Math.random() > 0.30) {
-            const isStrongBeat = (step === 0 || step === 4 || step === 8 || step === 12);
-            const note = getNextSoloNote(isStrongBeat);
-            const noteDuration = secondsPer16th * (2 + Math.floor(Math.random() * 2));
-            const vel = 0.52 + Math.random() * 0.18;
-            playSoloNote(note, actualTime, noteDuration, vel, true);
-            soloNotesRemainingInPhrase--;
-          }
-        }
+    const arpModeBtn = document.getElementById('arpModeBtn');
+    if (arpModeBtn) {
+      arpModeBtn.addEventListener('click', () => {
+        STATE.arpFollowMode = !STATE.arpFollowMode;
+        arpModeBtn.className = STATE.arpFollowMode 
+          ? 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vTeal/60 text-vTeal hover:bg-vTeal/20 transition font-bold'
+          : 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vAmber/60 text-vAmber hover:bg-vAmber/20 transition font-bold';
+        document.getElementById('arpModeText').innerText = STATE.arpFollowMode ? 'АРП: СЛЕДОВАТЬ ЗА АККОРДОМ' : 'АРП: ФИКСИРОВАННЫЙ МОТИВ (ОСТИНАТО)';
+        updateAllArpDisplays();
+      });
+    }
 
-        // Advance step
-        currentStepInBar++;
-        if (currentStepInBar >= 16) {
-          currentStepInBar = 0;
-          currentBarNumber++;
-        }
+    const beatContainer = document.getElementById('beatLedsContainer');
+    for (let i = 0; i < 16; i++) {
+      const led = document.createElement('div'); led.id = `beat-led-${i}`;
+      led.className = `h-2 rounded-full ${i % 4 === 0 ? 'bg-neutral-500' : 'bg-neutral-800'} transition-all`;
+      beatContainer.appendChild(led);
+    }
+    function highlightBeatLed(beatIndex) {
+      for (let i = 0; i < 16; i++) {
+        const el = document.getElementById(`beat-led-${i}`);
+        if (!el) continue;
+        el.className = (i === beatIndex && STATE.isPlaying) ? 'h-2 rounded-full tape-led-on' : `h-2 rounded-full ${i % 4 === 0 ? 'bg-neutral-500' : 'bg-neutral-800'}`;
+      }
+    }
 
-        nextBarTime += secondsPer16th;
+    const radarCanvas = document.getElementById('radarCanvas'), rCtx = radarCanvas.getContext('2d');
+    function resizeRadar() { radarCanvas.width = radarCanvas.offsetWidth; radarCanvas.height = radarCanvas.offsetHeight; }
+    window.addEventListener('resize', resizeRadar);
+
+    function drawRadar() {
+      requestAnimationFrame(drawRadar);
+      if (!radarCanvas.width || !radarCanvas.height) return;
+      const cx = radarCanvas.width / 2, cy = radarCanvas.height / 2, outerR = Math.min(cx, cy) - 12;
+      rCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+      const chordColors = ['#e63946', '#f77f00', '#2ec4b6', '#c6923a'];
+
+      for (let t = 0; t < 128; t++) {
+        const angle = (t / 128) * Math.PI * 2 - Math.PI / 2, px = cx + Math.cos(angle) * outerR, py = cy + Math.sin(angle) * outerR;
+        const isCurrent = t === STATE.currentTick128 && STATE.isPlaying;
+        rCtx.fillStyle = isCurrent ? '#ffffff' : (t % 32 === 0 ? chordColors[Math.floor(t / 32)] : 'rgba(255, 255, 255, 0.15)');
+        rCtx.beginPath(); rCtx.arc(px, py, isCurrent ? 4.5 : (t % 32 === 0 ? 3.2 : 1.4), 0, Math.PI * 2); rCtx.fill();
       }
 
-      schedulerTimerId = setTimeout(scheduleLoFiStep, 30);
+      const innerR = outerR * 0.72;
+      rCtx.strokeStyle = 'rgba(198, 146, 58, 0.2)'; rCtx.lineWidth = 1.5;
+      rCtx.beginPath(); rCtx.arc(cx, cy, innerR, 0, Math.PI * 2); rCtx.stroke();
+
+      for (let n = 0; n < 5; n++) {
+        const angle = (n / 5) * Math.PI * 2 - Math.PI / 2, px = cx + Math.cos(angle) * innerR, py = cy + Math.sin(angle) * innerR;
+        const isActive = (n === STATE.arpIndex % 5) && STATE.isPlaying;
+        rCtx.fillStyle = isActive ? '#2ec4b6' : 'rgba(46, 196, 182, 0.4)';
+        rCtx.beginPath(); rCtx.arc(px, py, isActive ? 5.5 : 3, 0, Math.PI * 2); rCtx.fill();
+      }
+
+      if (STATE.isPlaying) {
+        const a128 = (STATE.currentTick128 / 128) * Math.PI * 2 - Math.PI / 2, x128 = cx + Math.cos(a128) * outerR, y128 = cy + Math.sin(a128) * outerR;
+        const aArp = ((STATE.arpIndex % 5) / 5) * Math.PI * 2 - Math.PI / 2, xArp = cx + Math.cos(aArp) * innerR, yArp = cy + Math.sin(aArp) * innerR;
+        const grad = rCtx.createLinearGradient(x128, y128, xArp, yArp); grad.addColorStop(0, '#ff2a2a'); grad.addColorStop(1, '#2ec4b6');
+        rCtx.strokeStyle = grad; rCtx.lineWidth = 2; rCtx.beginPath(); rCtx.moveTo(x128, y128); rCtx.lineTo(xArp, yArp); rCtx.stroke();
+      }
+    }
+
+    function setupRotaryKnobs() {
+      document.querySelectorAll('.knob-container').forEach(container => {
+        const param = container.getAttribute('data-param'), min = parseFloat(container.getAttribute('data-min')), max = parseFloat(container.getAttribute('data-max'));
+        let currentVal = parseFloat(container.getAttribute('data-val'));
+        const dial = container.querySelector('.knob-dial'), valText = container.querySelector('.knob-val-text');
+
+        function updateKnobVisual(val) {
+          if (dial) dial.style.transform = `rotate(${-135 + ((val - min) / (max - min)) * 270}deg)`;
+          if (valText) valText.innerText = (param === 'cutoff' || param === 'bpm') ? `${Math.round(val)} ${param === 'bpm' ? 'BPM' : 'Hz'}` : (param === 'peak') ? val.toFixed(1) : (param === 'delayTime') ? `${Math.round(val * 1000)} ms` : `${Math.round(val * 100)}%`;
+        }
+        function applyAudioParam(val) {
+          STATE[param] = val;
+          if (!actx) return;
+          if (param === 'cutoff' && vcfFilter) vcfFilter.frequency.setValueAtTime(val, actx.currentTime);
+          else if (param === 'peak' && vcfFilter) vcfFilter.Q.setValueAtTime(val, actx.currentTime);
+          else if (param === 'delayTime' && dd5DelayL) { dd5DelayL.delayTime.setValueAtTime(val, actx.currentTime); dd5DelayR.delayTime.setValueAtTime(val * 1.33, actx.currentTime); }
+          else if (param === 'delayFeedback' && dd5FeedbackL) { dd5FeedbackL.gain.setValueAtTime(val, actx.currentTime); dd5FeedbackR.gain.setValueAtTime(val, actx.currentTime); }
+          else if (param === 'space' && rv6Gain) rv6Gain.gain.setValueAtTime(val * 0.75, actx.currentTime);
+          else if (param === 'masterVol' && masterGain) masterGain.gain.setValueAtTime(val, actx.currentTime);
+          else if (param === 'bassVol' && bassBusGain) bassBusGain.gain.setValueAtTime(STATE.bassActive ? val : 0, actx.currentTime);
+          else if (param === 'arpVol' && arpBusGain) arpBusGain.gain.setValueAtTime(STATE.arpActive ? val : 0, actx.currentTime);
+          else if (param === 'accentVol' && accentBusGain) accentBusGain.gain.setValueAtTime(STATE.accentActive ? val : 0, actx.currentTime);
+        }
+
+        updateKnobVisual(currentVal);
+        let isDragging = false, startY = 0, startVal = currentVal;
+
+        function onPointerDown(e) { initAudio(); isDragging = true; startY = e.clientY || e.touches[0].clientY; startVal = currentVal; document.body.style.cursor = 'ns-resize'; window.addEventListener('mousemove', onPointerMove); window.addEventListener('mouseup', onPointerUp); window.addEventListener('touchmove', onPointerMove, { passive: false }); window.addEventListener('touchend', onPointerUp); }
+        function onPointerMove(e) { if (!isDragging) return; if (e.preventDefault) e.preventDefault(); const dy = startY - (e.clientY || e.touches[0].clientY); currentVal = Math.max(min, Math.min(max, startVal + dy * (max - min) * 0.005)); updateKnobVisual(currentVal); applyAudioParam(currentVal); }
+        function onPointerUp() { isDragging = false; document.body.style.cursor = 'default'; window.removeEventListener('mousemove', onPointerMove); window.removeEventListener('mouseup', onPointerUp); window.removeEventListener('touchmove', onPointerMove); window.removeEventListener('touchend', onPointerUp); }
+
+        container.addEventListener('mousedown', onPointerDown); container.addEventListener('touchstart', onPointerDown, { passive: false });
+      });
     }
 
     function startPlayback() {
-      initAudio();
-      if (actx.state === 'suspended') {
-        actx.resume();
-      }
-
-      if (STATE.currentProgression.length === 0) {
-        generateNewHarmony();
-      }
-
-      // Smoothly unmute master output
-      if (masterMuteGain && actx) {
-        masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
-        masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
-        masterMuteGain.gain.linearRampToValueAtTime(1.0, actx.currentTime + 0.05);
-      }
-
-      STATE.isPlaying = true;
-      currentStepInBar = 0;
-      currentBarNumber = 0;
-      nextBarTime = actx.currentTime + 0.04;
-      scheduleLoFiStep();
-
-      document.getElementById('playText').innerText = 'ПАУЗА';
-      document.getElementById('playbackStatus').innerText = 'PLAYING';
-      document.getElementById('playbackStatus').classList.remove('text-lofi-muted');
-      document.getElementById('playbackStatus').classList.add('text-lofi-accent');
-      document.getElementById('recDot').classList.add('animate-ping');
-      document.getElementById('spoolLeft').classList.remove('tape-spin-paused');
-      document.getElementById('spoolRight').classList.remove('tape-spin-paused');
-
-      if (!STATE.tapeTimerId) {
-        STATE.tapeTimerId = setInterval(() => {
-          if (STATE.isPlaying) {
-            STATE.secondsPlayed++;
-            const m = String(Math.floor(STATE.secondsPlayed / 60)).padStart(2, '0');
-            const s = String(STATE.secondsPlayed % 60).padStart(2, '0');
-            document.getElementById('tapeCounter').innerText = `${m}:${s}`;
-          }
-        }, 1000);
-      }
+      initAudio(); if (actx.state === 'suspended') actx.resume();
+      if (masterMuteGain) { masterMuteGain.gain.cancelScheduledValues(actx.currentTime); masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime); masterMuteGain.gain.linearRampToValueAtTime(1.0, actx.currentTime + 0.04); }
+      STATE.isPlaying = true; nextTickTime = actx.currentTime + 0.04; scheduleFluxEngine();
+      document.getElementById('playText').innerText = 'PAUSE LOOP'; document.getElementById('playIcon').innerText = '⏸';
     }
-
-    // Trigger an instant expressive jazz solo riff grounded in the current active chord
-    function triggerExpressiveSoloRiff() {
-      initAudio();
-      if (actx.state === 'suspended') actx.resume();
-
-      if (masterMuteGain) {
-        masterMuteGain.gain.setValueAtTime(1.0, actx.currentTime);
-      }
-
-      const now = actx.currentTime + 0.02;
-      const stepTime = (60.0 / STATE.bpm) / 4;
-      const chordTones = getChordHarmonicNotes();
-
-      // Form a smooth 4-note jazz lick targeting the chord tones
-      let note = chordTones[0];
-      for (let i = 0; i < 4; i++) {
-        note = getNextSoloNote(i === 0 || i === 3);
-        const t = now + i * stepTime * 1.5;
-        playSoloNote(note, t, stepTime * 1.8, 0.70, true);
-      }
-    }
-
     function pausePlayback() {
-      STATE.isPlaying = false;
-      clearTimeout(schedulerTimerId);
-      clearInterval(STATE.tapeTimerId);
-      STATE.tapeTimerId = null;
-
-      // Cleanly mute master gate
-      if (masterMuteGain && actx) {
-        masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
-        masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
-        masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.06);
-      }
-
-      document.getElementById('playText').innerText = 'СТАРТ';
-      document.getElementById('playbackStatus').innerText = 'ПАУЗА';
-      document.getElementById('playbackStatus').classList.remove('text-lofi-accent');
-      document.getElementById('playbackStatus').classList.add('text-lofi-muted');
-      document.getElementById('recDot').classList.remove('animate-ping');
-      document.getElementById('spoolLeft').classList.add('tape-spin-paused');
-      document.getElementById('spoolRight').classList.add('tape-spin-paused');
+      STATE.isPlaying = false; clearTimeout(timerId);
+      if (masterMuteGain && actx) { masterMuteGain.gain.cancelScheduledValues(actx.currentTime); masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime); masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.04); }
+      document.getElementById('playText').innerText = 'PLAY FLUX LOOP'; document.getElementById('playIcon').innerText = '▶'; highlightBeatLed(null);
     }
+    function stopPlayback() { pausePlayback(); STATE.currentTick128 = 0; STATE.arpIndex = 0; document.getElementById('currentTickDisplay').innerText = 'TICK: 000 / 128'; highlightChordCard(0); }
 
-    function stopPlayback() {
-      STATE.isPlaying = false;
-      clearTimeout(schedulerTimerId);
-      clearInterval(STATE.tapeTimerId);
-      STATE.tapeTimerId = null;
-
-      // INSTANT SILENCE FOR ALL VOICES, DELAYS & RAIN/VINYL
-      if (masterMuteGain && actx) {
-        masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
-        masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
-        masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.04);
-      }
-
-      // Reset positions to 00:00
-      STATE.secondsPlayed = 0;
-      currentStepInBar = 0;
-      currentBarNumber = 0;
-      document.getElementById('tapeCounter').innerText = '00:00';
-      document.getElementById('currentChordName').innerText = 'СТОП';
-
-      document.getElementById('playText').innerText = 'СТАРТ';
-      document.getElementById('playbackStatus').innerText = 'STOPPED';
-      document.getElementById('playbackStatus').classList.remove('text-lofi-accent');
-      document.getElementById('playbackStatus').classList.add('text-lofi-muted');
-      document.getElementById('recDot').classList.remove('animate-ping');
-      document.getElementById('spoolLeft').classList.add('tape-spin-paused');
-      document.getElementById('spoolRight').classList.add('tape-spin-paused');
-      STATE.activeNotesVisual = [];
-    }
-
-    const visualizerCanvas = document.getElementById('visualizerCanvas');
-    const vCtx = visualizerCanvas.getContext('2d');
-    const pianoRollCanvas = document.getElementById('pianoRollCanvas');
-    const pCtx = pianoRollCanvas.getContext('2d');
-
-    const drops = Array.from({ length: 28 }, () => ({
-      x: Math.random() * 300,
-      y: Math.random() * 150,
-      speed: 0.8 + Math.random() * 2.2,
-      length: 8 + Math.random() * 14
-    }));
-
-    function resizeCanvases() {
-      visualizerCanvas.width = visualizerCanvas.offsetWidth;
-      visualizerCanvas.height = visualizerCanvas.offsetHeight;
-      pianoRollCanvas.width = pianoRollCanvas.offsetWidth;
-      pianoRollCanvas.height = pianoRollCanvas.offsetHeight;
-    }
-    window.addEventListener('resize', resizeCanvases);
-    resizeCanvases();
-
-    function drawVisualizer() {
-      requestAnimationFrame(drawVisualizer);
-      const w = visualizerCanvas.width;
-      const h = visualizerCanvas.height;
-
-      vCtx.fillStyle = '#0c0b12';
-      vCtx.fillRect(0, 0, w, h);
-
-      // Rain streaks
-      vCtx.strokeStyle = 'rgba(128, 206, 215, 0.22)';
-      vCtx.lineWidth = 1;
-      drops.forEach(d => {
-        vCtx.beginPath();
-        vCtx.moveTo(d.x % w, d.y);
-        vCtx.lineTo((d.x + 1) % w, d.y + d.length);
-        vCtx.stroke();
-        d.y += d.speed;
-        if (d.y > h) {
-          d.y = -15;
-          d.x = Math.random() * w;
-        }
-      });
-
-      // Frequency Spectrum Bars
-      if (analyser && STATE.isPlaying) {
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        analyser.getByteFrequencyData(dataArray);
-
-        const barCount = 24;
-        const barWidth = (w / barCount) - 3;
-
-        for (let i = 0; i < barCount; i++) {
-          const val = dataArray[i * 2] || 0;
-          const barHeight = (val / 255) * (h * 0.75);
-
-          const gradient = vCtx.createLinearGradient(0, h, 0, h - barHeight);
-          gradient.addColorStop(0, '#f4a261');
-          gradient.addColorStop(0.5, '#e76f51');
-          gradient.addColorStop(1, '#80ced7');
-
-          vCtx.fillStyle = gradient;
-          vCtx.fillRect(i * (barWidth + 3) + 4, h - barHeight - 4, barWidth, barHeight);
-        }
-      } else {
-        // Idle gentle waveform
-        vCtx.strokeStyle = 'rgba(244, 162, 97, 0.35)';
-        vCtx.beginPath();
-        for (let x = 0; x < w; x += 4) {
-          const y = h / 2 + Math.sin(x * 0.05 + performance.now() * 0.002) * 5;
-          if (x === 0) vCtx.moveTo(x, y);
-          else vCtx.lineTo(x, y);
-        }
-        vCtx.stroke();
-      }
-
-      drawPianoRoll();
-    }
-
-    function drawPianoRoll() {
-      const pw = pianoRollCanvas.width;
-      const ph = pianoRollCanvas.height;
-      const now = performance.now();
-
-      pCtx.fillStyle = '#08070d';
-      pCtx.fillRect(0, 0, pw, ph);
-
-      // Grid lines
-      pCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-      pCtx.lineWidth = 1;
-      for (let y = 0; y < ph; y += 10) {
-        pCtx.beginPath();
-        pCtx.moveTo(0, y);
-        pCtx.lineTo(pw, y);
-        pCtx.stroke();
-      }
-
-      // Render Scrolling Active Notes
-      STATE.activeNotesVisual = STATE.activeNotesVisual.filter(item => (now - item.startTime) < 5000);
-
-      STATE.activeNotesVisual.forEach(note => {
-        const age = now - note.startTime;
-        const x = pw - (age / 5000) * pw;
-        const noteY = ph - ((note.midi - 24) / 60) * ph;
-        const noteWidth = Math.max(14, (note.duration / 5000) * pw);
-
-        if (note.type === 'keys') {
-          pCtx.fillStyle = '#f4a261';
-        } else if (note.type === 'bass') {
-          pCtx.fillStyle = '#e76f51';
-        } else if (note.type === 'lead') {
-          pCtx.fillStyle = '#80ced7';
-        } else {
-          pCtx.fillStyle = '#b5838d';
-        }
-
-        pCtx.globalAlpha = Math.max(0.1, 1 - (age / 5000));
-        pCtx.fillRect(x, Math.max(2, Math.min(ph - 6, noteY)), noteWidth, 5);
-        pCtx.globalAlpha = 1.0;
-      });
-    }
-
-    drawVisualizer();
-
-    function exportSongToMidi() {
-      if (STATE.currentProgression.length === 0) {
-        generateNewHarmony();
-      }
-
-      function writeVarLength(value) {
-        let buffer = [];
-        let v = value & 0x7F;
-        while ((value >>= 7)) {
-          v <<= 8;
-          v |= 0x80;
-          v += (value & 0x7F);
-        }
-        while (true) {
-          buffer.push(v & 0xFF);
-          if (v & 0x80) v >>= 8;
-          else break;
-        }
-        return buffer;
-      }
-
-      const ticksPerBeat = 480;
-      const bpm = STATE.bpm;
-      const microsecondsPerBeat = Math.round(60000000 / bpm);
-
-      // Track 0: Tempo track
-      let track0 = [
-        0x00, 0xFF, 0x51, 0x03, 
-        (microsecondsPerBeat >> 16) & 0xFF, 
-        (microsecondsPerBeat >> 8) & 0xFF, 
-        microsecondsPerBeat & 0xFF,
-        0x00, 0xFF, 0x2F, 0x00
-      ];
-
-      let track1Events = []; // Keys
-      let track2Events = []; // Bass
-      let track3Events = []; // Drums
-
-      // Generate 4 full bars of MIDI
-      for (let bar = 0; bar < 4; bar++) {
-        const chord = STATE.currentProgression[bar % STATE.currentProgression.length];
-        const barStartTick = bar * 4 * ticksPerBeat;
-
-        // Chords
-        chord.intervals.forEach(interval => {
-          const note = chord.root + interval;
-          track1Events.push({ tick: barStartTick, status: 0x90, note: note, vel: 85 });
-          track1Events.push({ tick: barStartTick + Math.floor(ticksPerBeat * 3.8), status: 0x80, note: note, vel: 0 });
-        });
-
-        // Bass
-        track2Events.push({ tick: barStartTick, status: 0x91, note: chord.bass, vel: 95 });
-        track2Events.push({ tick: barStartTick + Math.floor(ticksPerBeat * 3.5), status: 0x81, note: chord.bass, vel: 0 });
-
-        // Drums (16-step grid)
-        const ticksPer16th = Math.floor(ticksPerBeat / 4);
-        for (let s = 0; s < 16; s++) {
-          let stepTick = barStartTick + s * ticksPer16th;
-          if (s % 2 === 1) stepTick += Math.floor(ticksPer16th * STATE.swing);
-
-          if (s === 0 || s === 6 || s === 10) {
-            track3Events.push({ tick: stepTick, status: 0x99, note: 36, vel: 100 });
-            track3Events.push({ tick: stepTick + 60, status: 0x89, note: 36, vel: 0 });
-          }
-          if (s === 4 || s === 12) {
-            track3Events.push({ tick: stepTick, status: 0x99, note: 38, vel: 90 });
-            track3Events.push({ tick: stepTick + 80, status: 0x89, note: 38, vel: 0 });
-          }
-          if (s % 2 === 0 || s % 3 === 0) {
-            track3Events.push({ tick: stepTick, status: 0x99, note: 42, vel: 70 });
-            track3Events.push({ tick: stepTick + 40, status: 0x89, note: 42, vel: 0 });
-          }
-        }
-      }
-
-      function buildTrackChunk(events) {
-        events.sort((a, b) => a.tick - b.tick);
-        let trackBytes = [];
-        let lastTick = 0;
-        events.forEach(e => {
-          let delta = e.tick - lastTick;
-          lastTick = e.tick;
-          trackBytes.push(...writeVarLength(delta));
-          trackBytes.push(e.status, e.note, e.vel);
-        });
-        trackBytes.push(0x00, 0xFF, 0x2F, 0x00);
-        const len = trackBytes.length;
-        return [
-          0x4D, 0x54, 0x72, 0x6B,
-          (len >> 24) & 0xFF,
-          (len >> 16) & 0xFF,
-          (len >> 8) & 0xFF,
-          len & 0xFF,
-          ...trackBytes
-        ];
-      }
-
-      const track1Chunk = buildTrackChunk(track1Events);
-      const track2Chunk = buildTrackChunk(track2Events);
-      const track3Chunk = buildTrackChunk(track3Events);
-
-      const track0Len = track0.length;
-      const track0Chunk = [
-        0x4D, 0x54, 0x72, 0x6B,
-        (track0Len >> 24) & 0xFF,
-        (track0Len >> 16) & 0xFF,
-        (track0Len >> 8) & 0xFF,
-        track0Len & 0xFF,
-        ...track0
-      ];
-
-      const headerChunk = [
-        0x4D, 0x54, 0x68, 0x64,
-        0x00, 0x00, 0x00, 0x06,
-        0x00, 0x01,
-        0x00, 0x04,
-        (ticksPerBeat >> 8) & 0xFF,
-        ticksPerBeat & 0xFF
-      ];
-
-      const fullMidiBytes = new Uint8Array([
-        ...headerChunk,
-        ...track0Chunk,
-        ...track1Chunk,
-        ...track2Chunk,
-        ...track3Chunk
-      ]);
-
-      const blob = new Blob([fullMidiBytes], { type: 'audio/midi' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Lofinfinity_${bpm}BPM.mid`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    // Master Volume Slider
-    const masterVolSlider = document.getElementById('masterVolumeSlider');
-    masterVolSlider.addEventListener('input', (e) => {
-      const v = parseFloat(e.target.value);
-      STATE.masterVolume = v;
-      document.getElementById('masterVolumeDisplay').innerText = `${Math.round(v * 100)}%`;
-      if (masterGain && actx) {
-        masterGain.gain.setValueAtTime(v, actx.currentTime);
-      }
-    });
-
-    // Play / Pause
-    const playBtn = document.getElementById('playBtn');
-    playBtn.addEventListener('click', () => {
-      if (STATE.isPlaying) {
-        pausePlayback();
-      } else {
-        startPlayback();
-      }
-    });
-
-    // Stop
+    document.getElementById('playBtn').addEventListener('click', () => { STATE.isPlaying ? pausePlayback() : startPlayback(); });
     document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+    document.getElementById('muteBassBtn').addEventListener('click', function() { STATE.bassActive = !STATE.bassActive; this.classList.toggle('opacity-40'); if (bassBusGain && actx) bassBusGain.gain.value = STATE.bassActive ? STATE.bassVol : 0; });
+    document.getElementById('muteArpBtn').addEventListener('click', function() { STATE.arpActive = !STATE.arpActive; this.classList.toggle('opacity-40'); if (arpBusGain && actx) arpBusGain.gain.value = STATE.arpActive ? STATE.arpVol : 0; });
+    document.getElementById('muteAccentBtn').addEventListener('click', function() { STATE.accentActive = !STATE.accentActive; this.classList.toggle('opacity-40'); if (accentBusGain && actx) accentBusGain.gain.value = STATE.accentActive ? STATE.accentVol : 0; });
 
-    // Next Vibe
-    document.getElementById('diceBtn').addEventListener('click', () => {
-      generateNewHarmony();
+    document.getElementById('loadPresetBtn').addEventListener('click', () => {
+      STATE.cutoff = 160; STATE.peak = 5.0; STATE.delayTime = 0.32; STATE.delayFeedback = 0.58; STATE.spaceAmount = 0.65; STATE.chordSustain = 0.85; STATE.bpm = 68;
+      STATE.arpNotes = [62, 65, 69, 72, 76]; STATE.arpFollowMode = false;
+      const arpModeBtn = document.getElementById('arpModeBtn');
+      if (arpModeBtn) { arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vAmber/60 text-vAmber hover:bg-vAmber/20 transition font-bold'; document.getElementById('arpModeText').innerText = 'АРП: ФИКСИРОВАННЫЙ МОТИВ (ОСТИНАТО)'; }
+      renderArpNoteEditor();
+      if (vcfFilter && actx) vcfFilter.frequency.value = 160;
+      ["Dm", "Bb", "F", "C"].forEach((cStr, idx) => {
+        const isMin = cStr.endsWith('m'), root = isMin ? cStr.slice(0, -1) : cStr, quality = isMin ? 'm' : 'M';
+        document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`).value = root;
+        document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`).value = quality;
+        applyChordChange(idx, root, quality);
+      });
       if (!STATE.isPlaying) startPlayback();
     });
 
-    // MIDI Export
-    document.getElementById('exportMidiBtn').addEventListener('click', exportSongToMidi);
+    window.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); STATE.isPlaying ? pausePlayback() : startPlayback(); }});
 
-    // Solo Riff Trigger
-    document.getElementById('triggerSoloBtn').addEventListener('click', triggerExpressiveSoloRiff);
-
-    // Auto-Solo Toggle
-    document.getElementById('autoSoloCheck').addEventListener('change', (e) => {
-      STATE.autoSolo = e.target.checked;
-    });
-
-    // Solo Instrument Timbre
-    document.getElementById('leadTimbreSelect').addEventListener('change', (e) => {
-      STATE.soloTimbre = e.target.value;
-    });
-
-    // Keys, Bass, Drum Timbre
-    document.getElementById('keysTypeSelect').addEventListener('change', (e) => {
-      STATE.keysTimbre = e.target.value;
-    });
-    document.getElementById('bassTypeSelect').addEventListener('change', (e) => {
-      STATE.bassTimbre = e.target.value;
-    });
-    document.getElementById('drumTypeSelect').addEventListener('change', (e) => {
-      STATE.drumTimbre = e.target.value;
-    });
-
-    // BPM & Swing
-    document.getElementById('bpmInput').addEventListener('input', (e) => {
-      STATE.bpm = parseInt(e.target.value);
-      document.getElementById('bpmValue').innerText = STATE.bpm;
-    });
-    document.getElementById('swingInput').addEventListener('input', (e) => {
-      STATE.swing = parseInt(e.target.value) / 100;
-      document.getElementById('swingValue').innerText = `${e.target.value}%`;
-    });
-
-    // Key Selector
-    document.getElementById('keySelect').addEventListener('change', (e) => {
-      STATE.selectedKey = e.target.value;
-      generateNewHarmony();
-    });
-
-    // Dynamic Channel Mixer Sliders & Mute Toggles
-    Object.keys(CHANNELS).forEach(name => {
-      const ch = CHANNELS[name];
-      const slider = document.getElementById(ch.sliderId);
-      const valDisplay = document.getElementById(ch.valId);
-      const muteBtn = document.getElementById(ch.muteBtnId);
-
-      if (slider) {
-        slider.addEventListener('input', (e) => {
-          ch.vol = parseFloat(e.target.value);
-          if (valDisplay) valDisplay.innerText = `${Math.round(ch.vol * 100)}%`;
-          updateChannelGain(name);
-        });
-      }
-
-      if (muteBtn) {
-        muteBtn.addEventListener('click', () => {
-          ch.muted = !ch.muted;
-          if (ch.muted) {
-            muteBtn.classList.remove('bg-white/10', 'text-lofi-muted');
-            muteBtn.classList.add('bg-red-500', 'text-white', 'border-red-400');
-            muteBtn.innerText = 'MUTED';
-          } else {
-            muteBtn.classList.remove('bg-red-500', 'text-white', 'border-red-400');
-            muteBtn.classList.add('bg-white/10', 'text-lofi-muted');
-            muteBtn.innerText = 'MUTE';
-          }
-          updateChannelGain(name);
-        });
-      }
-    });
-
-    // Filter Cutoff & Saturation
-    document.getElementById('filterCutoff').addEventListener('input', (e) => {
-      const hz = parseInt(e.target.value);
-      document.getElementById('filterCutoffVal').innerText = `${hz} Hz`;
-      if (masterFilter && actx) masterFilter.frequency.setValueAtTime(hz, actx.currentTime);
-    });
-
-    document.getElementById('driveAmount').addEventListener('input', (e) => {
-      const v = parseFloat(e.target.value);
-      document.getElementById('driveVal').innerText = v > 0.6 ? 'Warm Crunch' : (v > 0.2 ? 'Subtle Warm' : 'Clean');
-      makeDistortionCurve(v);
-    });
-
-    document.getElementById('wobbleVol').addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      document.getElementById('wobbleVolVal').innerText = `${Math.round(val * 100)}%`;
-      if (wobbleGain && actx) wobbleGain.gain.setValueAtTime(val * 10, actx.currentTime);
-    });
-
-    // CRT Scanlines
-    const scanlinesBtn = document.getElementById('scanlinesBtn');
-    const overlay = document.getElementById('scanlineOverlay');
-    let scanlinesEnabled = true;
-    scanlinesBtn.addEventListener('click', () => {
-      scanlinesEnabled = !scanlinesEnabled;
-      overlay.style.display = scanlinesEnabled ? 'block' : 'none';
-      scanlinesBtn.innerText = `CRT: ${scanlinesEnabled ? 'ON' : 'OFF'}`;
-    });
-
-    // Interactive Jam Pads Clicks
-    document.querySelectorAll('.solo-pad').forEach(btn => {
-      btn.addEventListener('click', () => {
-        initAudio();
-        if (actx.state === 'suspended') actx.resume();
-        if (masterMuteGain) masterMuteGain.gain.setValueAtTime(1.0, actx.currentTime);
-
-        const idx = parseInt(btn.getAttribute('data-note-index'));
-        const noteMidi = STATE.currentScaleNotes[idx % STATE.currentScaleNotes.length];
-        playSoloNote(noteMidi, actx.currentTime, 0.6, 0.85);
-      });
-    });
-
-    // Keyboard 1-8 Hotkeys for Live Jamming
-    window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      const keyNum = parseInt(e.key);
-      if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= 8) {
-        initAudio();
-        if (actx.state === 'suspended') actx.resume();
-        if (masterMuteGain) masterMuteGain.gain.setValueAtTime(1.0, actx.currentTime);
-
-        const idx = keyNum - 1;
-        const noteMidi = STATE.currentScaleNotes[idx % STATE.currentScaleNotes.length];
-        playSoloNote(noteMidi, actx.currentTime, 0.6, 0.85);
-
-        // Flash pad UI
-        const pad = document.querySelector(`.solo-pad[data-note-index="${idx}"]`);
-        if (pad) {
-          pad.classList.add('glow-accent');
-          setTimeout(() => pad.classList.remove('glow-accent'), 180);
-        }
-      }
-    });
-
-    // Pomodoro Timer
-    const pomoDisplay = document.getElementById('pomoDisplay');
-    const pomoToggleBtn = document.getElementById('pomoToggleBtn');
-    const pomoResetBtn = document.getElementById('pomoResetBtn');
-
-    function updatePomoDisplay() {
-      const m = String(Math.floor(STATE.pomoSeconds / 60)).padStart(2, '0');
-      const s = String(STATE.pomoSeconds % 60).padStart(2, '0');
-      pomoDisplay.innerText = `${m}:${s}`;
-    }
-
-    pomoToggleBtn.addEventListener('click', () => {
-      if (STATE.pomoRunning) {
-        clearInterval(STATE.pomoTimerId);
-        STATE.pomoRunning = false;
-        pomoToggleBtn.innerText = '▶';
-      } else {
-        STATE.pomoRunning = true;
-        pomoToggleBtn.innerText = '⏸';
-        STATE.pomoTimerId = setInterval(() => {
-          if (STATE.pomoSeconds > 0) {
-            STATE.pomoSeconds--;
-            updatePomoDisplay();
-          } else {
-            clearInterval(STATE.pomoTimerId);
-            STATE.pomoRunning = false;
-            pomoToggleBtn.innerText = '▶';
-            STATE.pomoSeconds = 25 * 60;
-            updatePomoDisplay();
-          }
-        }, 1000);
-      }
-    });
-
-    pomoResetBtn.addEventListener('click', () => {
-      clearInterval(STATE.pomoTimerId);
-      STATE.pomoRunning = false;
-      pomoToggleBtn.innerText = '▶';
-      STATE.pomoSeconds = 25 * 60;
-      updatePomoDisplay();
-    });
-
-    // Preload initial progression
-    generateNewHarmony(false);
-
+    setupRotaryKnobs(); setupChordSelectors(); renderArpNoteEditor(); renderAccentEditor(); updateAllArpDisplays();
+    setTimeout(resizeRadar, 100); drawRadar();
   })();
   </script>
 </body>
