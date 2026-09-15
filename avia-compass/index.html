@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мой Авиа-Компас (Метки на карте)</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background: #111; }
+        #map-container { position: relative; width: 100%; height: 100vh; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Прозрачная панель перехвата кликов для меток */
+        #click-catcher {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 80;
+            display: none;
+            cursor: crosshair;
+            background: rgba(0, 123, 255, 0.05);
+        }
+        #click-catcher.active-mode {
+            display: block;
+        }
+
+        /* Слой-компас */
+        .compass-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 650px;
+            height: 650px;
+            pointer-events: none;
+            z-index: 100;
+            transition: transform 0.2s ease;
+        }
+
+        /* Центр компаса (точка отсчета) */
+        .center-dot {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            background: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 110;
+            pointer-events: none;
+            box-shadow: 0 0 5px white;
+        }
+
+        /* Контейнер для кастомных маркеров прямо на карте */
+        #map-markers-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 90;
+        }
+
+        .map-pin {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            background: #fff;
+            padding: 2px 6px;
+            border: 2px solid #dc3545;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #dc3545;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            pointer-events: auto;
+        }
+        .map-pin::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 4px 0;
+            border-style: solid;
+            border-color: #dc3545 transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* Инфо-панель управления */
+        .info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            z-index: 300;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-width: 380px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .info input, .info select {
+            padding: 4px;
+            margin: 2px 4px 2px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .info input[type="text"] { width: 140px; }
+        .info input[type="number"] { width: 65px; }
+
+        .info button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .info button:hover { background: #0056b3; }
+        .info button.active-btn { background: #28a745; }
+
+        .control-group {
+            margin-top: 10px;
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+        }
+
+        .marker-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f3f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            font-size: 12px;
+        }
+        .marker-item button {
+            background: #dc3545;
+            padding: 2px 6px;
+            margin: 0;
+            font-size: 11px;
+        }
+        .marker-item button:hover { background: #c82333; }
+
+        /* Сектор обзора */
+        .window-sector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2500px;
+            height: 2500px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="info">
+        <b>✈️ Авиа-Компас (Метки на карте)</b><br>
+        <span style="color: orange">●</span> Сектор: <span id="sector-label">160° - 260°</span>
+        
+        <div class="control-group">
+            <label>Тип карты:</label><br>
+            <select id="inp-map-type" onchange="updateMap()">
+                <option value="map">Схема (карта)</option>
+                <option value="sat">Спутник</option>
+                <option value="skl">Гибрид (Спутник с подписями)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Центр (Координаты LL):</label><br>
+            <input type="text" id="inp-ll" value="65.603474,57.103468">
+            <button onclick="updateMap()">Применить</button>
+        </div>
+
+        <div class="control-group">
+            <label>Сектор обзора (°):</label><br>
+            от <input type="number" id="inp-from" value="160" oninput="updateSector()">
+            до <input type="number" id="inp-to" value="260" oninput="updateSector()">
+        </div>
+
+        <div class="control-group">
+            <label>Поворот компаса (°):</label>
+            <input type="number" id="inp-rot" value="0" oninput="updateRotation()">
+        </div>
+
+        <div class="control-group">
+            <b>📍 Поставить метку на карту:</b><br>
+            <button id="btn-pick" onclick="togglePickMode()" style="background: #6c757d;">🎯 Кликнуть на карту</button>
+            <div id="pick-info" style="font-size: 11px; color: #555; margin-top: 3px;">Режим выключен</div>
+            
+            <div id="save-box" style="display:none; margin-top: 6px; background: #e9ecef; padding: 6px; border-radius: 4px;">
+                <input type="text" id="m-name" placeholder="Название точки" style="width: 120px;"><br>
+                <span id="m-info-text" style="font-size: 11px; font-weight: bold;">Азимут: 0°</span><br>
+                <button onclick="savePickedMarker()" style="background: #28a745; padding: 4px 10px; font-size: 12px; margin-top: 4px;">💾 Сохранить метку</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <b>Список меток:</b>
+            <div id="markers-list" style="margin-top: 6px; max-height: 100px; overflow-y: auto;"></div>
+        </div>
+
+        <div class="control-group" style="text-align: right;">
+            <button onclick="resetSettings()" style="background: #6c757d; font-weight: normal; font-size: 11px; padding: 3px 8px;">Сбросить всё</button>
+        </div>
+    </div>
+
+    <div id="map-container">
+        <iframe id="map-frame" src=""></iframe>
+        
+        <!-- Слой для кликов -->
+        <div id="click-catcher"></div>
+        <!-- Слой для пинов на карте -->
+        <div id="map-markers-layer"></div>
+
+        <!-- Центральная точка -->
+        <div class="center-dot" title="Центр вашего обзора"></div>
+        
+        <div class="window-sector" id="sector-div"></div>
+
+        <div class="compass-overlay" id="compass-container">
+            <svg id="compass" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 100,10 A 90,90 0 1,0 100,190 A 90,90 0 1,0 100,10 Z M 100,75 A 25,25 0 1,1 100,125 A 25,25 0 1,1 100,75 Z" 
+                      fill="rgba(176, 112, 112, 0.4)" fill-rule="evenodd" stroke="black" stroke-width="0.3" />
+                
+                <line x1="92" y1="100" x2="108" y2="100" stroke="black" stroke-width="1" />
+                <line x1="100" y1="92" x2="100" y2="108" stroke="black" stroke-width="1" />
+
+                <g id="scale"></g>
+                <g id="compass-pins-layer"></g>
+
+                <text x="100" y="33" fill="black" font-size="14" font-weight="bold" text-anchor="middle">N</text>
+                <text x="100" y="174" fill="black" font-size="14" font-weight="bold" text-anchor="middle">S</text>
+                <text x="167" y="105" fill="black" font-size="14" font-weight="bold" text-anchor="middle">E</text>
+                <text x="33" y="105" fill="black" font-size="14" font-weight="bold" text-anchor="middle">W</text>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const scaleGroup = document.getElementById('scale');
+        const compassPinsLayer = document.getElementById('compass-pins-layer');
+        const mapPinsLayer = document.getElementById('map-markers-layer');
+        const cx = 100, cy = 100;
+
+        // Шкала компаса
+        for (let i = 0; i < 360; i += 10) {
+            const angle = (i - 90) * (Math.PI / 180);
+            const x1 = cx + 85 * Math.cos(angle);
+            const y1 = cy + 85 * Math.sin(angle);
+            const x2 = cx + 90 * Math.cos(angle);
+            const y2 = cy + 90 * Math.sin(angle);
+            
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+            line.setAttribute("stroke", "black");
+            line.setAttribute("stroke-width", "0.4");
+            scaleGroup.appendChild(line);
+
+            const tx = cx + 77 * Math.cos(angle);
+            const ty = cy + 77 * Math.sin(angle) + 2;
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", tx); text.setAttribute("y", ty);
+            text.setAttribute("fill", "black");
+            text.setAttribute("font-size", "5");
+            text.setAttribute("text-anchor", "middle");
+            text.textContent = i;
+            text.setAttribute("transform", `rotate(${i} ${tx} ${ty - 2})`);
+            scaleGroup.appendChild(text);
+        }
+
+        // Синие лучи
+        for (let i = 0; i < 360; i += 30) {
+            const angle = (i - 90) * (Math.PI / 180);
+            const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            l.setAttribute("x1", cx + 25 * Math.cos(angle));
+            l.setAttribute("y1", cy + 25 * Math.sin(angle));
+            l.setAttribute("x2", cx + 75 * Math.cos(angle));
+            l.setAttribute("y2", cy + 75 * Math.sin(angle));
+            l.setAttribute("stroke", "rgba(0,0,255,0.2)");
+            l.setAttribute("stroke-width", "0.3");
+            scaleGroup.appendChild(l);
+        }
+
+        let markers = JSON.parse(localStorage.getItem('compass_markers_v3') || '[]');
+        let isPickMode = false;
+        let tempPickedX = 0, tempPickedY = 0;
+        let tempPickedAzimuth = 0;
+
+        function loadSettings() {
+            const savedLl = localStorage.getItem('compass_ll') || "65.603474,57.103468";
+            const savedType = localStorage.getItem('compass_type') || "map";
+            const savedFrom = localStorage.getItem('compass_from') || "160";
+            const savedTo = localStorage.getItem('compass_to') || "260";
+            const savedRot = localStorage.getItem('compass_rot') || "0";
+
+            document.getElementById('inp-ll').value = savedLl;
+            document.getElementById('inp-map-type').value = savedType;
+            document.getElementById('inp-from').value = savedFrom;
+            document.getElementById('inp-to').value = savedTo;
+            document.getElementById('inp-rot').value = savedRot;
+
+            updateMap(false);
+            updateSector(false);
+            updateRotation(false);
+            renderMarkers();
+        }
+
+        function updateMap(save = true) {
+            const ll = document.getElementById('inp-ll').value.trim();
+            const mapType = document.getElementById('inp-map-type').value;
+            document.getElementById('map-frame').src = `https://yandex.ru/map-widget/v1/?l=${mapType}&ll=${encodeURIComponent(ll)}&z=15`;
+            
+            if (save) {
+                localStorage.setItem('compass_ll', ll);
+                localStorage.setItem('compass_type', mapType);
+            }
+        }
+
+        function updateSector(save = true) {
+            let fromDeg = parseFloat(document.getElementById('inp-from').value) || 0;
+            let toDeg = parseFloat(document.getElementById('inp-to').value) || 360;
+            
+            let span = toDeg - fromDeg;
+            if (span < 0) span += 360;
+
+            document.getElementById('sector-label').textContent = `${fromDeg}° - ${toDeg}°`;
+            
+            const sectorDiv = document.getElementById('sector-div');
+            sectorDiv.style.background = `conic-gradient(
+                from ${fromDeg}deg, 
+                rgba(255, 140, 0, 0.2) 0deg, 
+                rgba(255, 140, 0, 0.2) ${span}deg, 
+                transparent ${span}deg
+            )`;
+
+            if (save) {
+                localStorage.setItem('compass_from', fromDeg);
+                localStorage.setItem('compass_to', toDeg);
+            }
+        }
+
+        function updateRotation(save = true) {
+            const rot = parseFloat(document.getElementById('inp-rot').value) || 0;
+            document.getElementById('compass-container').style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+            if (save) localStorage.setItem('compass_rot', rot);
+        }
+
+        function togglePickMode() {
+            isPickMode = !isPickMode;
+            const catcher = document.getElementById('click-catcher');
+            const btn = document.getElementById('btn-pick');
+            const info = document.getElementById('pick-info');
+
+            if (isPickMode) {
+                catcher.classList.add('active-mode');
+                btn.className = 'active-btn';
+                btn.textContent = '❌ Отменить выбор';
+                info.textContent = 'Кликните в любое место на карте!';
+            } else {
+                catcher.classList.remove('active-mode');
+                btn.className = '';
+                btn.style.background = '#6c757d';
+                btn.textContent = '🎯 Кликнуть на карту';
+                info.textContent = 'Режим выключен';
+            }
+        }
+
+        document.getElementById('click-catcher').addEventListener('mousedown', function(event) {
+            if (!isPickMode) return;
+
+            const rect = document.getElementById('map-container').getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            tempPickedX = event.clientX - rect.left;
+            tempPickedY = event.clientY - rect.top;
+
+            const deltaX = tempPickedX - centerX;
+            const deltaY = tempPickedY - centerY;
+
+            let rad = Math.atan2(deltaY, deltaX);
+            let deg = rad * (180 / Math.PI) + 90;
+            if (deg < 0) deg += 360;
+
+            const currentRot = parseFloat(document.getElementById('inp-rot').value) || 0;
+            tempPickedAzimuth = Math.round((deg - currentRot + 360) % 360);
+
+            document.getElementById('m-info-text').textContent = `Азимут: ${tempPickedAzimuth}°`;
+            document.getElementById('save-box').style.display = 'block';
+
+            togglePickMode();
+        });
+
+        function savePickedMarker() {
+            const name = document.getElementById('m-name').value.trim();
+            if (!name) {
+                alert("Введите название метки!");
+                return;
+            }
+
+            markers.push({ 
+                name, 
+                azimuth: tempPickedAzimuth, 
+                x: tempPickedX, 
+                y: tempPickedY 
+            });
+            localStorage.setItem('compass_markers_v3', JSON.stringify(markers));
+
+            document.getElementById('m-name').value = '';
+            document.getElementById('save-box').style.display = 'none';
+            renderMarkers();
+        }
+
+        function deleteMarker(index) {
+            markers.splice(index, 1);
+            localStorage.setItem('compass_markers_v3', JSON.stringify(markers));
+            renderMarkers();
+        }
+
+        function renderMarkers() {
+            compassPinsLayer.innerHTML = '';
+            mapPinsLayer.innerHTML = '';
+            const listContainer = document.getElementById('markers-list');
+            listContainer.innerHTML = '';
+
+            markers.forEach((m, idx) => {
+                // 1. Пин на карте
+                const pin = document.createElement('div');
+                pin.className = 'map-pin';
+                pin.style.left = m.x + 'px';
+                pin.style.top = m.y + 'px';
+                pin.textContent = `${m.name} (${m.azimuth}°)`;
+                mapPinsLayer.appendChild(pin);
+
+                // 2. Отметка на компасе
+                const angle = (m.azimuth - 90) * (Math.PI / 180);
+                const mx = cx + 65 * Math.cos(angle);
+                const my = cy + 65 * Math.sin(angle);
+                const x1 = cx + 25 * Math.cos(angle);
+                const y1 = cy + 25 * Math.sin(angle);
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+                line.setAttribute("x2", mx); line.setAttribute("y2", my);
+                line.setAttribute("stroke", "#dc3545");
+                line.setAttribute("stroke-width", "0.6");
+                compassPinsLayer.appendChild(line);
+
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", mx); circle.setAttribute("cy", my);
+                circle.setAttribute("r", "2.5"); circle.setAttribute("fill", "#dc3545");
+                compassPinsLayer.appendChild(circle);
+
+                const tx = cx + 53 * Math.cos(angle);
+                const ty = cy + 53 * Math.sin(angle) + 1.5;
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", tx); text.setAttribute("y", ty);
+                text.setAttribute("fill", "#b00");
+                text.setAttribute("font-size", "4.5");
+                text.setAttribute("font-weight", "bold");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = `${m.name} (${m.azimuth}°)`;
+                compassPinsLayer.appendChild(text);
+
+                // 3. Список
+                const item = document.createElement('div');
+                item.className = 'marker-item';
+                item.innerHTML = `<span><b>${m.name}</b> — ${m.azimuth}°</span> <button onclick="deleteMarker(${idx})">✕</button>`;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function resetSettings() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>
