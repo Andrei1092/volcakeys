@@ -3,13 +3,1452 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Volca Keys Station</title>
+  <title>Volca Keys - 128-Step FLUX Station (Carpe Diem)</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            volca: ['Oswald', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            vFace: '#1a181b',
+            vChassis: '#110f13',
+            vPanel: '#242129',
+            vGold: '#c6923a',
+            vRed: '#e63946',
+            vAmber: '#f77f00',
+            vLed: '#ff2a2a',
+            vTeal: '#2ec4b6'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .knob-container {
+      user-select: none;
+      touch-action: none;
+    }
+    .knob-dial {
+      transition: transform 0.04s ease-out;
+      transform-origin: center center;
+    }
+    .tape-led-on {
+      background-color: #ff2a2a;
+      box-shadow: 0 0 10px #ff2a2a, 0 0 18px rgba(255, 42, 42, 0.75);
+    }
+    .volca-acrylic-knob {
+      background: radial-gradient(circle, rgba(255, 60, 60, 0.45) 0%, rgba(20, 16, 22, 0.95) 75%);
+      box-shadow: inset 0 0 10px rgba(255, 50, 50, 0.5), 0 0 14px rgba(255, 40, 40, 0.25);
+    }
+    .metal-plate {
+      background: linear-gradient(180deg, #2b2733 0%, #1c1a22 40%, #15131a 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 30px rgba(0, 0, 0, 0.85);
+    }
+    .clear-acrylic {
+      background: radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.4) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
 </head>
-<body class="bg-[#0b0a0e] text-neutral-400 font-mono min-h-screen p-6 flex flex-col items-center justify-center">
-  <div class="text-center">
-    <h1 class="text-xl font-bold text-white mb-2">РЕПОЗИТОРИЙ ОЧИЩЕН</h1>
-    <p class="text-xs">Жду твой файл, шеф. Ща всё впендюрим.</p>
-  </div>
+<body class="bg-[#0b0a0e] text-neutral-200 font-mono min-h-screen p-3 sm:p-6 flex flex-col items-center select-none selection:bg-vGold selection:text-black">
+
+  <main class="w-full max-w-5xl metal-plate rounded-3xl border-2 border-[#383344] p-5 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col gap-5">
+    
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="px-2.5 py-1 bg-vGold text-black font-volca font-bold text-lg tracking-widest rounded shadow">
+          VOLCA
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-volca font-bold tracking-widest text-white uppercase flex items-center gap-2">
+            KEYS <span class="text-xs text-vGold font-mono font-normal">128-STEP FLUX &bull; HARMONIC ENGINE</span>
+          </h1>
+          <p class="text-[10px] text-neutral-400">Volca Keys (128 Ticks = 4 Такта) &bull; BOSS DD-5 &bull; BOSS RV-6 &bull; Fixed Motif / Smart Modal Arp</p>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2 sm:gap-3 text-xs">
+        <button id="loadPresetBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-vGold/20 hover:bg-vGold text-vGold hover:text-black border border-vGold/50 transition font-bold shadow-sm" title="Загрузить оригинальные настройки из видео carpe diem">
+          <span>🎬</span>
+          <span>ТРЕК ИЗ ВИДЕО (CARPE DIEM)</span>
+        </button>
+
+        <button id="arpModeBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vTeal/60 text-vTeal hover:bg-vTeal/20 transition font-bold" title="Переключить режим арпеджио">
+          <span class="w-2 h-2 rounded-full bg-vTeal"></span>
+          <span id="arpModeText">АРП: СЛЕДОВАТЬ ЗА АККОРДОМ</span>
+        </button>
+
+        <button id="fluxToggleBtn" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-black/60 border border-vRed/60 text-vRed hover:bg-vRed/10 transition font-bold">
+          <span id="fluxLed" class="w-2.5 h-2.5 rounded-full tape-led-on"></span>
+          <span>FLUX: 128 TICKS</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 4 Ticks / Chords Progression Section -->
+    <div class="bg-black/60 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
+      <div class="flex flex-wrap items-center justify-between text-xs gap-2">
+        <span class="text-neutral-300 font-bold flex items-center gap-2">
+          <span class="text-vGold">🎼</span> 4 ТАКТА ГАРМОНИИ (ПО 1 ТАКТУ / 32 ТИКА НА АККОРД)
+        </span>
+        
+        <div class="flex items-center gap-1.5 text-[11px]">
+          <span class="text-neutral-400">Пресеты:</span>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Dm,Bb,F,C">Dm-Bb-F-C</button>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Am7,Fmaj7,Cmaj7,G7">Am7-Fmaj7-Cmaj7-G7</button>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Dm7,G7,Cmaj7,A7">Dm7-G7-Cmaj7-A7</button>
+          <button class="preset-prog-btn px-2 py-0.5 rounded bg-white/5 hover:bg-vGold/20 border border-white/10 hover:border-vGold/40 text-neutral-300 hover:text-vGold transition font-mono" data-prog="Em,Cmaj7,G,D7">Em-Cmaj7-G-D7</button>
+        </div>
+
+        <span id="currentChordPhaseText" class="text-vGold font-bold font-mono">ТАКТ 1 / 4: D MINOR</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Chord 1 Card -->
+        <div id="chord-card-0" class="chord-box p-3 rounded-xl border-2 border-vGold bg-vGold/20 shadow-md shadow-vGold/25 ring-1 ring-vGold/60 opacity-100 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-vGold tracking-wider">ТАКТ 1 (АККОРД 1)</span>
+            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 001-032</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="0">
+              <option value="C">C</option><option value="C#">C#</option><option value="D" selected>D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="0">
+              <option value="m" selected>m</option>
+              <option value="M">M</option>
+              <option value="7">7</option>
+              <option value="maj7">maj7</option>
+              <option value="m7">m7</option>
+              <option value="dim">dim</option>
+              <option value="sus4">sus4</option>
+              <option value="sus2">sus2</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
+            <span id="chord-name-0" class="font-bold text-white text-[11px]">Dm</span>
+            <span id="chord-notes-0">D2 + F3 + A3</span>
+          </div>
+          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
+            <span class="text-neutral-500">АРП:</span>
+            <span id="chord-arp-0" class="font-bold">D4 F4 A4 D5 F5</span>
+          </div>
+        </div>
+
+        <!-- Chord 2 Card -->
+        <div id="chord-card-1" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 2 (АККОРД 2)</span>
+            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 033-064</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="1">
+              <option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb" selected>Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="1">
+              <option value="m">m</option>
+              <option value="M" selected>M</option>
+              <option value="7">7</option>
+              <option value="maj7">maj7</option>
+              <option value="m7">m7</option>
+              <option value="dim">dim</option>
+              <option value="sus4">sus4</option>
+              <option value="sus2">sus2</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
+            <span id="chord-name-1" class="font-bold text-white text-[11px]">Bb</span>
+            <span id="chord-notes-1">Bb1 + D3 + F3</span>
+          </div>
+          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
+            <span class="text-neutral-500">АРП:</span>
+            <span id="chord-arp-1" class="font-bold">Bb4 D5 F5 Bb5 D6</span>
+          </div>
+        </div>
+
+        <!-- Chord 3 Card -->
+        <div id="chord-card-2" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 3 (АККОРД 3)</span>
+            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 065-096</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="2">
+              <option value="C">C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F" selected>F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="2">
+              <option value="m">m</option>
+              <option value="M" selected>M</option>
+              <option value="7">7</option>
+              <option value="maj7">maj7</option>
+              <option value="m7">m7</option>
+              <option value="dim">dim</option>
+              <option value="sus4">sus4</option>
+              <option value="sus2">sus2</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
+            <span id="chord-name-2" class="font-bold text-white text-[11px]">F</span>
+            <span id="chord-notes-2">F2 + A3 + C4</span>
+          </div>
+          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
+            <span class="text-neutral-500">АРП:</span>
+            <span id="chord-arp-2" class="font-bold">F4 A4 C5 F5 A5</span>
+          </div>
+        </div>
+
+        <!-- Chord 4 Card -->
+        <div id="chord-card-3" class="chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[11px] font-volca font-bold text-neutral-300 tracking-wider">ТАКТ 4 (АККОРД 4)</span>
+            <span class="text-[9px] text-neutral-400 font-mono">ТИКИ 097-128</span>
+          </div>
+          <div class="flex items-center gap-1.5 w-full my-1.5">
+            <select class="chord-root-select flex-1 bg-black/80 border border-white/20 hover:border-vGold text-white rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="3">
+              <option value="C" selected>C</option><option value="C#">C#</option><option value="D">D</option><option value="Eb">Eb</option><option value="E">E</option><option value="F">F</option><option value="F#">F#</option><option value="G">G</option><option value="Ab">Ab</option><option value="A">A</option><option value="Bb">Bb</option><option value="B">B</option>
+            </select>
+            <select class="chord-type-select bg-black/80 border border-white/20 hover:border-vGold text-vGold rounded px-2 py-1 text-xs font-bold font-mono focus:outline-none focus:border-vGold" data-chord-idx="3">
+              <option value="m">m</option>
+              <option value="M" selected>M</option>
+              <option value="7">7</option>
+              <option value="maj7">maj7</option>
+              <option value="m7">m7</option>
+              <option value="dim">dim</option>
+              <option value="sus4">sus4</option>
+              <option value="sus2">sus2</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between w-full text-[9px] text-neutral-400 font-mono border-t border-white/10 pt-1">
+            <span id="chord-name-3" class="font-bold text-white text-[11px]">C</span>
+            <span id="chord-notes-3">C2 + E3 + G3</span>
+          </div>
+          <div class="text-[9px] text-vTeal font-mono flex items-center justify-between mt-1">
+            <span class="text-neutral-500">АРП:</span>
+            <span id="chord-arp-3" class="font-bold">C4 E4 G4 C5 E5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Arp Motif & Accent Pattern Editors -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      
+      <!-- Arp Motif Editor (5 Steps) -->
+      <div class="bg-black/60 border border-vTeal/30 rounded-2xl p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+          <span class="font-bold text-vTeal flex items-center gap-1.5">
+            <span>🎹</span> РЕДАКТОР СТУПЕНЕЙ АРПЕДЖИО (5 ШАГОВ)
+          </span>
+          <div class="flex items-center gap-1">
+            <button id="arpPresetCarpe" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Carpe Diem (1-3-5-7-9)</button>
+            <button id="arpPresetMaj9" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Upper Triad (3-5-7-9-8)</button>
+            <button id="arpPresetAsc" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vTeal/20 border border-white/10 text-[10px] text-neutral-300 transition">Ascending (1-3-5-8-10)</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-5 gap-2" id="arpEditorsContainer">
+          <!-- Populated via JS -->
+        </div>
+        <span class="text-[10px] text-neutral-400">Ступени автоматически адаптируются под лад аккорда (мажор / минор), избегая диссонансов.</span>
+      </div>
+
+      <!-- Accent Pattern Editor (8 Steps) -->
+      <div class="bg-black/60 border border-vRed/30 rounded-2xl p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+          <span class="font-bold text-vRed flex items-center gap-1.5">
+            <span>✨</span> РЕДАКТОР АКЦЕНТОВ (8 ШАГОВ --xx----)
+          </span>
+          <div class="flex items-center gap-1">
+            <button id="accentPresetSync" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Syncopated</button>
+            <button id="accentPresetEvery" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Offbeat</button>
+            <button id="accentPresetOff" class="px-2 py-0.5 rounded bg-white/5 hover:bg-vRed/20 border border-white/10 text-[10px] text-neutral-300 transition">Mute</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-8 gap-1.5" id="accentEditorsContainer">
+          <!-- Populated via JS -->
+        </div>
+        <span class="text-[10px] text-neutral-400">Хрустальные колокольчики берут устойчивые консонансные обертоны текущего аккорда.</span>
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+      
+      <!-- 128-Tick Radar & Transport Screen (5 Cols) -->
+      <div class="lg:col-span-5 clear-acrylic rounded-2xl p-4 flex flex-col items-center justify-center relative">
+        <div class="w-full flex items-center justify-between text-[11px] text-neutral-400 mb-2">
+          <span>РАДАР 128 ТИКОВ ($25 \times 5 + 3$)</span>
+          <span id="currentTickDisplay" class="text-vGold font-bold font-mono">TICK: 000 / 128</span>
+        </div>
+
+        <div class="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
+          <canvas id="radarCanvas" class="w-full h-full block"></canvas>
+          <div class="absolute flex flex-col items-center pointer-events-none">
+            <span id="chordRootDisp" class="text-xl sm:text-2xl font-volca font-bold text-white tracking-widest">D MINOR</span>
+            <span id="phaseLagDisp" class="text-[10px] text-vAmber font-bold mt-0.5">СДВИГ: +3 ТИКА/ЦИКЛ</span>
+            <span class="text-[9px] text-neutral-500 uppercase mt-1">128 &divide; 5 = 25 (ост. 3)</span>
+          </div>
+        </div>
+
+        <div class="w-full flex flex-col gap-1 mt-3">
+          <div class="flex justify-between text-[9px] text-neutral-500 uppercase px-0.5">
+            <span>Такт 1</span>
+            <span>Такт 2</span>
+            <span>Такт 3</span>
+            <span>Такт 4</span>
+          </div>
+          <div class="w-full grid grid-cols-16 gap-1" id="beatLedsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Rotary Knobs & Mixer (7 Cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        
+        <!-- Big VCF Filter & Sound Section -->
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4 sm:p-5 shadow-lg">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2 mb-4">
+            <span class="text-xs font-bold text-vGold tracking-wider flex items-center gap-1.5">
+              <span>🎛️</span> АНАЛОГОВЫЙ VCF ФИЛЬТР (ГЛАВНАЯ РУЧКА ИЗ ВИДЕО)
+            </span>
+            <span class="text-[10px] text-neutral-400">Тяните вверх для раскрытия 5-нотного арпеджио</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center justify-items-center">
+            
+            <!-- Knob 1: BIG CUTOFF -->
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="cutoff" data-min="100" data-max="9000" data-val="180">
+              <div class="relative w-20 h-20 sm:w-22 sm:h-22 rounded-full volca-acrylic-knob border-2 border-vGold p-1 flex items-center justify-center shadow-lg shadow-red-600/30">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-600 relative flex items-center justify-center">
+                  <div class="absolute top-1.5 w-1.5 h-4 bg-vGold rounded-full shadow-sm"></div>
+                  <div class="w-8 h-8 rounded-full bg-[#121015] border border-neutral-700 flex items-center justify-center">
+                    <span class="text-[9px] text-vGold font-bold">VCF</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">CUTOFF</span>
+              <span class="text-[10px] text-vGold font-bold knob-val-text">180 Hz</span>
+            </div>
+
+            <!-- Knob 2: PEAK (Resonance) -->
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="peak" data-min="0.5" data-max="16" data-val="5.5">
+              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center">
+                  <div class="absolute top-1.5 w-1 h-3.5 bg-vRed rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">PEAK (RES)</span>
+              <span class="text-[10px] text-vRed font-bold knob-val-text">5.5</span>
+            </div>
+
+            <!-- Knob 3: BOSS DD-5 DELAY TIME -->
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="delayTime" data-min="0.08" data-max="0.8" data-val="0.32">
+              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center">
+                  <div class="absolute top-1.5 w-1 h-3.5 bg-vAmber rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">DD-5 TIME</span>
+              <span class="text-[10px] text-vAmber font-bold knob-val-text">320 ms</span>
+            </div>
+
+            <!-- Knob 4: BOSS DD-5 FEEDBACK -->
+            <div class="knob-container flex flex-col items-center group cursor-ns-resize" data-param="delayFeedback" data-min="0" data-max="0.88" data-val="0.58">
+              <div class="relative w-16 h-16 rounded-full volca-acrylic-knob border border-neutral-600 p-1 flex items-center justify-center shadow-md">
+                <div class="knob-dial w-full h-full rounded-full border border-neutral-700 relative flex items-center justify-center">
+                  <div class="absolute top-1.5 w-1 h-3.5 bg-vAmber rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-volca font-bold tracking-wider text-white mt-2">DD-5 F.BACK</span>
+              <span class="text-[10px] text-vAmber font-bold knob-val-text">58%</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Secondary Knobs Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          
+          <!-- BOSS RV-6 Reverb Space -->
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="space" data-min="0" data-max="1" data-val="0.65">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">RV-6 REVERB</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
+              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                <div class="absolute top-1 w-1 h-2.5 bg-vTeal rounded-full"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-vTeal mt-1.5 knob-val-text">65%</span>
+          </div>
+
+          <!-- Chord Sustain / Warmth -->
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="chordSustain" data-min="0.2" data-max="1" data-val="0.85">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">СУСТЕЙН АККОРДОВ</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
+              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                <div class="absolute top-1 w-1 h-2.5 bg-vGold rounded-full"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-vGold mt-1.5 knob-val-text">85%</span>
+          </div>
+
+          <!-- LFO Rate -->
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="lfoRate" data-min="0.1" data-max="8" data-val="1.2">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">LFO RATE</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
+              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                <div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-white mt-1.5 knob-val-text">1.2 Hz</span>
+          </div>
+
+          <!-- BPM (Musical Range: 45 to 110 BPM) -->
+          <div class="bg-black/40 border border-white/5 rounded-xl p-3 flex flex-col items-center knob-container cursor-ns-resize" data-param="bpm" data-min="45" data-max="110" data-val="68">
+            <span class="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">TEMPO (BPM)</span>
+            <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-600 flex items-center justify-center">
+              <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                <div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-white mt-1.5 knob-val-text">68 BPM</span>
+          </div>
+
+        </div>
+
+        <!-- 4-Channel Analog Level Mixer -->
+        <div class="bg-black/50 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
+          <div class="flex items-center justify-between text-xs border-b border-white/10 pb-2">
+            <span class="font-bold text-white flex items-center gap-1.5">
+              <span>🎚️</span> АНАЛОГОВЫЙ МИКШЕР УРОВНЕЙ (БАЛАНС СЛОЕВ)
+            </span>
+            <span class="text-[10px] text-neutral-400">Раздельный баланс громкостей всех слоев</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-center">
+            <!-- Bass Level -->
+            <div class="bg-black/40 border border-vTeal/30 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="bassVol" data-min="0" data-max="1" data-val="0.30">
+              <span class="text-[10px] text-vTeal font-bold uppercase mb-1">ГРОМК. 1 (БАС)</span>
+              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-vTeal/60 flex items-center justify-center">
+                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                  <div class="absolute top-1 w-1 h-2.5 bg-vTeal rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-vTeal mt-1 knob-val-text">30%</span>
+            </div>
+
+            <!-- Arp Level -->
+            <div class="bg-black/40 border border-vGold/30 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="arpVol" data-min="0" data-max="1" data-val="0.75">
+              <span class="text-[10px] text-vGold font-bold uppercase mb-1">ГРОМК. 2 (АРП)</span>
+              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-vGold/60 flex items-center justify-center">
+                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                  <div class="absolute top-1 w-1 h-2.5 bg-vGold rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-vGold mt-1 knob-val-text">75%</span>
+            </div>
+
+            <!-- Accent Level -->
+            <div class="bg-black/40 border border-vRed/30 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="accentVol" data-min="0" data-max="1" data-val="0.60">
+              <span class="text-[10px] text-vRed font-bold uppercase mb-1">ГРОМК. 3 (АКЦЕНТ)</span>
+              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-vRed/60 flex items-center justify-center">
+                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                  <div class="absolute top-1 w-1 h-2.5 bg-vRed rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-vRed mt-1 knob-val-text">60%</span>
+            </div>
+
+            <!-- Master Volume -->
+            <div class="bg-black/40 border border-white/20 rounded-xl p-2.5 flex flex-col items-center knob-container cursor-ns-resize" data-param="masterVol" data-min="0" data-max="1" data-val="0.80">
+              <span class="text-[10px] text-white font-bold uppercase mb-1">MASTER VOLUME</span>
+              <div class="relative w-12 h-12 rounded-full volca-acrylic-knob border border-neutral-400 flex items-center justify-center">
+                <div class="knob-dial w-full h-full rounded-full relative flex items-center justify-center">
+                  <div class="absolute top-1 w-1 h-2.5 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-white mt-1 knob-val-text">80%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Transport & Mute Buttons -->
+    <div class="border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <button id="muteBassBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vTeal bg-vTeal/15 text-vTeal font-bold transition">
+          <span class="w-2 h-2 rounded-full bg-vTeal"></span>
+          <span>1: БАС И АККОРДЫ (4 ТАКТА)</span>
+        </button>
+
+        <button id="muteArpBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vGold bg-vGold/15 text-vGold font-bold transition">
+          <span class="w-2 h-2 rounded-full bg-vGold"></span>
+          <span>2: АРПЕДЖИО (5 НОТ)</span>
+        </button>
+
+        <button id="muteAccentBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-vRed bg-vRed/15 text-vRed font-bold transition">
+          <span class="w-2 h-2 rounded-full bg-vRed"></span>
+          <span>3: АКЦЕНТЫ</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="playBtn" class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-vGold to-vAmber text-black font-volca font-bold text-sm tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition">
+          <span id="playIcon">▶</span>
+          <span id="playText">PLAY FLUX LOOP</span>
+        </button>
+
+        <button id="stopBtn" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono text-xs active:scale-95 transition">
+          ■ STOP
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+  (function() {
+    'use strict';
+
+    const CHORD_INTERVAL_MAP = {
+      'm':    { triadOffsets: [0, 3, 7],     third: 3, fifth: 7, seventh: 10, name: 'MINOR' },
+      'M':    { triadOffsets: [0, 4, 7],     third: 4, fifth: 7, seventh: 11, name: 'MAJOR' },
+      '7':    { triadOffsets: [0, 4, 10],    third: 4, fifth: 7, seventh: 10, name: 'DOM 7' },
+      'maj7': { triadOffsets: [0, 4, 11],    third: 4, fifth: 7, seventh: 11, name: 'MAJ 7' },
+      'm7':   { triadOffsets: [0, 3, 10],    third: 3, fifth: 7, seventh: 10, name: 'MIN 7' },
+      'dim':  { triadOffsets: [0, 3, 6],     third: 3, fifth: 6, seventh: 9,  name: 'DIM' },
+      'sus4': { triadOffsets: [0, 5, 7],     third: 5, fifth: 7, seventh: 10, name: 'SUS 4' },
+      'sus2': { triadOffsets: [0, 2, 7],     third: 2, fifth: 7, seventh: 10, name: 'SUS 2' }
+    };
+
+    const STATE = {
+      isPlaying: false,
+      currentTick128: 0,
+      bpm: 68,
+      
+      cutoff: 180,
+      peak: 5.5,
+      delayTime: 0.32,
+      delayFeedback: 0.58,
+      spaceAmount: 0.65,
+      chordSustain: 0.85,
+      lfoRate: 1.2,
+
+      masterVol: 0.80,
+      bassVol: 0.30,
+      arpVol: 0.75,
+      accentVol: 0.60,
+
+      bassActive: true,
+      arpActive: true,
+      accentActive: true,
+
+      arpFollowMode: true,
+
+      bassChords: [
+        { name: "D MINOR",  rootMidi: 38, triad: [50, 53, 57], root: "D",  quality: "m" },
+        { name: "Bb MAJOR", rootMidi: 34, triad: [46, 50, 53], root: "Bb", quality: "M" },
+        { name: "F MAJOR",  rootMidi: 41, triad: [41, 48, 53], root: "F",  quality: "M" },
+        { name: "C MAJOR",  rootMidi: 36, triad: [48, 52, 55], root: "C",  quality: "M" }
+      ],
+
+      customArpIntervals: [0, 3, 7, 12, 15],
+
+      arpStepTickInterval: 2,
+      arpIndex: 0,
+
+      accentMask: [0, 0, 1, 1, 0, 0, 0, 0]
+    };
+
+    const ROOT_MIDI_MAP = {
+      'C': 36, 'C#': 37, 'D': 38, 'Eb': 39,
+      'E': 40, 'F': 41, 'F#': 42, 'G': 43,
+      'Ab': 44, 'A': 45, 'Bb': 34, 'B': 35
+    };
+
+    const NOTE_NAMES_ARR = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+    function midiToNoteName(m) {
+      const oct = Math.floor(m / 12) - 1;
+      return `${NOTE_NAMES_ARR[m % 12]}${oct}`;
+    }
+
+    function mtof(m) {
+      return 440 * Math.pow(2, (m - 69) / 12);
+    }
+
+    // Гармонический расчет арпеджио с поддержкой всех типов аккордов
+    function computeHarmonicArpMotif(rootMidi, quality) {
+      if (!STATE.arpFollowMode) {
+        const dBase = 62; // D4
+        return [dBase, dBase + 3, dBase + 7, dBase + 10, dBase + 14];
+      }
+
+      let root = rootMidi;
+      while (root < 60) root += 12;
+      while (root > 71) root -= 12;
+
+      const qInfo = CHORD_INTERVAL_MAP[quality] || CHORD_INTERVAL_MAP['M'];
+      const third = qInfo.third;
+      const fifth = qInfo.fifth;
+      const seventh = qInfo.seventh;
+      const tenth = 12 + third;
+
+      return STATE.customArpIntervals.map(degree => {
+        let offset = degree;
+        if (degree === 3 || degree === 4) offset = third;
+        else if (degree === 7 || degree === 6) offset = fifth;
+        else if (degree === 10 || degree === 11) offset = seventh;
+        else if (degree === 15 || degree === 16) offset = tenth;
+        return root + offset;
+      });
+    }
+
+    function computeHarmonicAccentNote(chord) {
+      let root = chord.rootMidi;
+      while (root < 72) root += 12;
+      const qInfo = CHORD_INTERVAL_MAP[chord.quality] || CHORD_INTERVAL_MAP['M'];
+      const validTones = [root, root + qInfo.third, root + qInfo.fifth, root + qInfo.seventh, root + 12];
+      return validTones[Math.floor(Math.random() * validTones.length)];
+    }
+
+    let actx = null;
+    let masterMuteGain = null;
+    let masterGain = null;
+    let vcfFilter = null;
+    let lfoOsc = null;
+    let lfoGain = null;
+
+    let bassBusGain = null;
+    let arpBusGain = null;
+    let accentBusGain = null;
+
+    let dd5DelayL = null;
+    let dd5DelayR = null;
+    let dd5FeedbackL = null;
+    let dd5FeedbackR = null;
+    let dd5Filter = null;
+    let rv6Reverb = null;
+    let rv6Gain = null;
+
+    let timerId = null;
+    let nextTickTime = 0;
+
+    function initAudio() {
+      if (actx) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      actx = new AudioContext();
+
+      masterMuteGain = actx.createGain();
+      masterMuteGain.gain.setValueAtTime(0.0, actx.currentTime);
+
+      masterGain = actx.createGain();
+      masterGain.gain.setValueAtTime(STATE.masterVol, actx.currentTime);
+
+      bassBusGain = actx.createGain();
+      bassBusGain.gain.setValueAtTime(STATE.bassActive ? STATE.bassVol : 0, actx.currentTime);
+
+      arpBusGain = actx.createGain();
+      arpBusGain.gain.setValueAtTime(STATE.arpActive ? STATE.arpVol : 0, actx.currentTime);
+
+      accentBusGain = actx.createGain();
+      accentBusGain.gain.setValueAtTime(STATE.accentActive ? STATE.accentVol : 0, actx.currentTime);
+
+      vcfFilter = actx.createBiquadFilter();
+      vcfFilter.type = 'lowpass';
+      vcfFilter.frequency.setValueAtTime(STATE.cutoff, actx.currentTime);
+      vcfFilter.Q.setValueAtTime(STATE.peak, actx.currentTime);
+
+      bassBusGain.connect(vcfFilter);
+      arpBusGain.connect(vcfFilter);
+      accentBusGain.connect(vcfFilter);
+
+      lfoOsc = actx.createOscillator();
+      lfoGain = actx.createGain();
+      lfoOsc.frequency.setValueAtTime(STATE.lfoRate, actx.currentTime);
+      lfoGain.gain.setValueAtTime(45, actx.currentTime);
+      lfoOsc.connect(lfoGain);
+      lfoGain.connect(vcfFilter.frequency);
+      lfoOsc.start();
+
+      dd5DelayL = actx.createDelay();
+      dd5DelayR = actx.createDelay();
+      dd5DelayL.delayTime.setValueAtTime(STATE.delayTime, actx.currentTime);
+      dd5DelayR.delayTime.setValueAtTime(STATE.delayTime * 1.33, actx.currentTime);
+
+      dd5FeedbackL = actx.createGain();
+      dd5FeedbackR = actx.createGain();
+      dd5FeedbackL.gain.setValueAtTime(STATE.delayFeedback, actx.currentTime);
+      dd5FeedbackR.gain.setValueAtTime(STATE.delayFeedback, actx.currentTime);
+
+      dd5Filter = actx.createBiquadFilter();
+      dd5Filter.type = 'lowpass';
+      dd5Filter.frequency.setValueAtTime(4200, actx.currentTime);
+
+      dd5DelayL.connect(dd5FeedbackL);
+      dd5FeedbackL.connect(dd5DelayR);
+      dd5DelayR.connect(dd5FeedbackR);
+      dd5FeedbackR.connect(dd5DelayL);
+
+      initRV6Reverb();
+
+      vcfFilter.connect(masterGain);
+      vcfFilter.connect(dd5DelayL);
+      vcfFilter.connect(dd5DelayR);
+      dd5DelayL.connect(dd5Filter);
+      dd5DelayR.connect(dd5Filter);
+      dd5Filter.connect(masterGain);
+
+      masterGain.connect(masterMuteGain);
+      masterMuteGain.connect(actx.destination);
+    }
+
+    function initRV6Reverb() {
+      const sampleRate = actx.sampleRate;
+      const length = sampleRate * 3.4;
+      const impulse = actx.createBuffer(2, length, sampleRate);
+      const left = impulse.getChannelData(0);
+      const right = impulse.getChannelData(1);
+
+      for (let i = 0; i < length; i++) {
+        const decay = Math.exp(-i / (sampleRate * 1.15));
+        const mod = Math.sin(i * 0.004) * 0.05;
+        left[i] = ((Math.random() * 2 - 1) + mod) * decay;
+        right[i] = ((Math.random() * 2 - 1) - mod) * decay;
+      }
+
+      rv6Reverb = actx.createConvolver();
+      rv6Reverb.buffer = impulse;
+      rv6Gain = actx.createGain();
+      rv6Gain.gain.setValueAtTime(STATE.spaceAmount * 0.75, actx.currentTime);
+
+      vcfFilter.connect(rv6Reverb);
+      dd5Filter.connect(rv6Reverb);
+      rv6Reverb.connect(rv6Gain);
+      rv6Gain.connect(masterGain);
+    }
+
+    function triggerChordSustain(chord, time, duration) {
+      if (!actx || !STATE.bassActive || !bassBusGain) return;
+
+      const subFreq = mtof(chord.rootMidi);
+      const subOsc = actx.createOscillator();
+      const subSaw = actx.createOscillator();
+      const subGain = actx.createGain();
+
+      subOsc.type = 'triangle';
+      subSaw.type = 'sawtooth';
+      subOsc.frequency.setValueAtTime(subFreq, time);
+      subSaw.frequency.setValueAtTime(subFreq, time);
+
+      subGain.gain.setValueAtTime(0.001, time);
+      subGain.gain.linearRampToValueAtTime(0.24, time + 0.08);
+      subGain.gain.exponentialRampToValueAtTime(0.15, time + duration * 0.75);
+      subGain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      subOsc.connect(subGain);
+      subSaw.connect(subGain);
+      subGain.connect(bassBusGain);
+
+      subOsc.start(time);
+      subSaw.start(time);
+      subOsc.stop(time + duration);
+      subSaw.stop(time + duration);
+
+      chord.triad.forEach((mid, idx) => {
+        const osc = actx.createOscillator();
+        const g = actx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(mtof(mid), time);
+        osc.detune.setValueAtTime((idx - 1) * 7, time);
+
+        g.gain.setValueAtTime(0.0001, time);
+        g.gain.linearRampToValueAtTime(0.18 * STATE.chordSustain, time + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.10 * STATE.chordSustain, time + duration * 0.8);
+        g.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+        osc.connect(g);
+        g.connect(bassBusGain);
+
+        osc.start(time);
+        osc.stop(time + duration);
+      });
+    }
+
+    function triggerBassPulse(midi, time) {
+      if (!actx || !STATE.bassActive || !bassBusGain) return;
+      const freq = mtof(midi);
+      const osc = actx.createOscillator();
+      const env = actx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+
+      env.gain.setValueAtTime(0.0001, time);
+      env.gain.linearRampToValueAtTime(0.12, time + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+
+      osc.connect(env);
+      env.connect(bassBusGain);
+
+      osc.start(time);
+      osc.stop(time + 0.19);
+    }
+
+    function triggerArpNote(midi, time) {
+      if (!actx || !STATE.arpActive || !arpBusGain) return;
+      const freq = mtof(midi);
+      const osc = actx.createOscillator();
+      const env = actx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+
+      env.gain.setValueAtTime(0.0001, time);
+      env.gain.linearRampToValueAtTime(0.36, time + 0.006);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.34);
+
+      osc.connect(env);
+      env.connect(arpBusGain);
+
+      osc.start(time);
+      osc.stop(time + 0.36);
+    }
+
+    function triggerAccentNote(midi, time) {
+      if (!actx || !STATE.accentActive || !accentBusGain) return;
+      const freq = mtof(midi);
+      const osc = actx.createOscillator();
+      const env = actx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, time);
+
+      env.gain.setValueAtTime(0.0001, time);
+      env.gain.linearRampToValueAtTime(0.24, time + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + 0.14);
+
+      osc.connect(env);
+      env.connect(accentBusGain);
+
+      osc.start(time);
+      osc.stop(time + 0.15);
+    }
+
+    function scheduleFluxEngine() {
+      if (!STATE.isPlaying) return;
+
+      const secondsPerBeat = 60.0 / STATE.bpm;
+      const secondsPerTick = secondsPerBeat / 8.0;
+      const chordDuration = secondsPerTick * 32.0;
+      const lookahead = 0.12;
+
+      while (nextTickTime < actx.currentTime + lookahead) {
+        const tick = STATE.currentTick128;
+        const playTime = nextTickTime;
+
+        const chordIndex = Math.floor(tick / 32) % 4;
+        const currentChord = STATE.bassChords[chordIndex];
+
+        if (tick % 32 === 0) {
+          triggerChordSustain(currentChord, playTime, chordDuration);
+        }
+        
+        if (tick % 4 === 0) {
+          triggerBassPulse(currentChord.rootMidi, playTime);
+        }
+
+        let activeArpNote = null;
+        if (tick % STATE.arpStepTickInterval === 0) {
+          const activeMotif = computeHarmonicArpMotif(currentChord.rootMidi, currentChord.quality);
+          activeArpNote = activeMotif[STATE.arpIndex % activeMotif.length];
+          triggerArpNote(activeArpNote, playTime);
+          STATE.arpIndex++;
+        }
+
+        const tickIn8 = tick % 8;
+        if (STATE.accentMask[tickIn8] === 1) {
+          const accentMidi = computeHarmonicAccentNote(currentChord);
+          triggerAccentNote(accentMidi, playTime);
+        }
+
+        const delayMs = Math.max(0, (playTime - actx.currentTime) * 1000);
+        setTimeout(((t, cIdx, cObj, playedArp) => {
+          return () => {
+            const tickDisp = document.getElementById('currentTickDisplay');
+            const chordRootDisp = document.getElementById('chordRootDisp');
+            const chordPhaseText = document.getElementById('currentChordPhaseText');
+            if (tickDisp) tickDisp.innerText = `TICK: ${String(t).padStart(3, '0')} / 128`;
+            if (chordRootDisp) chordRootDisp.innerText = cObj.name;
+            if (chordPhaseText) chordPhaseText.innerText = `ТАКТ ${cIdx + 1} / 4: ${cObj.name}`;
+            highlightChordCard(cIdx);
+            highlightBeatLed(Math.floor(t / 8));
+          };
+        })(tick, chordIndex, currentChord, activeArpNote), delayMs);
+
+        STATE.currentTick128 = (STATE.currentTick128 + 1) % 128;
+        nextTickTime += secondsPerTick;
+      }
+
+      timerId = setTimeout(scheduleFluxEngine, 25);
+    }
+
+    function highlightChordCard(activeIdx) {
+      for (let i = 0; i < 4; i++) {
+        const card = document.getElementById(`chord-card-${i}`);
+        if (!card) continue;
+        if (i === activeIdx && STATE.isPlaying) {
+          card.className = 'chord-box p-3 rounded-xl border-2 border-vGold bg-vGold/25 shadow-md shadow-vGold/25 ring-1 ring-vGold/60 opacity-100 flex flex-col justify-between min-h-[128px] transition-colors duration-150';
+        } else {
+          card.className = 'chord-box p-3 rounded-xl border-2 border-white/10 bg-black/40 opacity-70 flex flex-col justify-between min-h-[128px] transition-colors duration-150';
+        }
+      }
+    }
+
+    function applyChordChange(idx, root, quality) {
+      const rootMidi = ROOT_MIDI_MAP[root] || 38;
+      const qInfo = CHORD_INTERVAL_MAP[quality] || CHORD_INTERVAL_MAP['M'];
+      
+      const triad = qInfo.triadOffsets.map(offset => rootMidi + 12 + offset);
+      const chordName = `${root} ${qInfo.name}`;
+
+      STATE.bassChords[idx] = {
+        name: chordName,
+        rootMidi: rootMidi,
+        triad: triad,
+        root: root,
+        quality: quality
+      };
+
+      const nameEl = document.getElementById(`chord-name-${idx}`);
+      const notesEl = document.getElementById(`chord-notes-${idx}`);
+
+      if (nameEl) nameEl.innerText = `${root}${quality === 'M' ? '' : quality}`;
+      if (notesEl) notesEl.innerText = `${midiToNoteName(rootMidi)} + ${midiToNoteName(triad[1])} + ${midiToNoteName(triad[2])}`;
+      
+      updateAllArpDisplays();
+    }
+
+    function setupChordSelectors() {
+      document.querySelectorAll('.chord-root-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-chord-idx'));
+          const quality = document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`).value;
+          applyChordChange(idx, e.target.value, quality);
+        });
+      });
+
+      document.querySelectorAll('.chord-type-select').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-chord-idx'));
+          const root = document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`).value;
+          applyChordChange(idx, root, e.target.value);
+        });
+      });
+
+      document.querySelectorAll('.preset-prog-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const chords = e.target.getAttribute('data-prog').split(',');
+          chords.forEach((cStr, idx) => {
+            let root = 'C';
+            let quality = 'M';
+
+            if (cStr.includes('maj7')) {
+              root = cStr.replace('maj7', '');
+              quality = 'maj7';
+            } else if (cStr.includes('m7')) {
+              root = cStr.replace('m7', '');
+              quality = 'm7';
+            } else if (cStr.includes('7')) {
+              root = cStr.replace('7', '');
+              quality = '7';
+            } else if (cStr.includes('dim')) {
+              root = cStr.replace('dim', '');
+              quality = 'dim';
+            } else if (cStr.includes('sus4')) {
+              root = cStr.replace('sus4', '');
+              quality = 'sus4';
+            } else if (cStr.includes('sus2')) {
+              root = cStr.replace('sus2', '');
+              quality = 'sus2';
+            } else if (cStr.endsWith('m')) {
+              root = cStr.slice(0, -1);
+              quality = 'm';
+            } else {
+              root = cStr;
+              quality = 'M';
+            }
+
+            const rootSel = document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`);
+            const typeSel = document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`);
+            if (rootSel) rootSel.value = root;
+            if (typeSel) typeSel.value = quality;
+            applyChordChange(idx, root, quality);
+          });
+        });
+      });
+    }
+
+    function updateAllArpDisplays() {
+      STATE.bassChords.forEach((chord, idx) => {
+        const arpEl = document.getElementById(`chord-arp-${idx}`);
+        if (arpEl) {
+          const motif = computeHarmonicArpMotif(chord.rootMidi, chord.quality);
+          arpEl.innerText = motif.map(midiToNoteName).join(' ');
+        }
+      });
+    }
+
+    function renderArpEditor() {
+      const container = document.getElementById('arpEditorsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      STATE.customArpIntervals.forEach((interval, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col gap-1';
+
+        const label = document.createElement('span');
+        label.className = 'text-[9px] text-neutral-400 text-center';
+        label.innerText = `Шаг ${i + 1}`;
+
+        const select = document.createElement('select');
+        select.className = 'bg-black/80 border border-vTeal/40 hover:border-vTeal text-vTeal text-[11px] font-bold rounded p-1 text-center focus:outline-none';
+        
+        const possibleDegrees = [
+          { val: 0, name: '1 (Тоника)' },
+          { val: 3, name: '3 (Терция)' },
+          { val: 7, name: '5 (Квинта)' },
+          { val: 10, name: '7 (Септима)' },
+          { val: 12, name: '8 (Октава)' },
+          { val: 14, name: '9 (Нона)' },
+          { val: 15, name: '10 (Терция + окт)' },
+          { val: 17, name: '11 (Ундецима)' }
+        ];
+
+        possibleDegrees.forEach(opt => {
+          const o = document.createElement('option');
+          o.value = opt.val;
+          o.innerText = opt.name;
+          if (opt.val === interval) o.selected = true;
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', (e) => {
+          STATE.customArpIntervals[i] = parseInt(e.target.value);
+          updateAllArpDisplays();
+        });
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(select);
+        container.appendChild(wrapper);
+      });
+    }
+
+    function renderAccentEditor() {
+      const container = document.getElementById('accentEditorsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      STATE.accentMask.forEach((val, i) => {
+        const btn = document.createElement('button');
+        btn.className = `h-9 rounded-lg border font-bold text-xs transition flex items-center justify-center ${val === 1 ? 'bg-vRed/30 border-vRed text-vRed shadow-sm' : 'bg-black/40 border-white/10 text-neutral-600 hover:border-white/30'}`;
+        btn.innerText = val === 1 ? 'X' : '-';
+        btn.addEventListener('click', () => {
+          STATE.accentMask[i] = STATE.accentMask[i] === 1 ? 0 : 1;
+          renderAccentEditor();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    document.getElementById('arpPresetCarpe').addEventListener('click', () => {
+      STATE.customArpIntervals = [0, 3, 7, 10, 14];
+      renderArpEditor();
+      updateAllArpDisplays();
+    });
+    document.getElementById('arpPresetMaj9').addEventListener('click', () => {
+      STATE.customArpIntervals = [3, 7, 10, 14, 12];
+      renderArpEditor();
+      updateAllArpDisplays();
+    });
+    document.getElementById('arpPresetAsc').addEventListener('click', () => {
+      STATE.customArpIntervals = [0, 3, 7, 12, 15];
+      renderArpEditor();
+      updateAllArpDisplays();
+    });
+
+    document.getElementById('accentPresetSync').addEventListener('click', () => {
+      STATE.accentMask = [0, 0, 1, 1, 0, 0, 0, 0];
+      renderAccentEditor();
+    });
+    document.getElementById('accentPresetEvery').addEventListener('click', () => {
+      STATE.accentMask = [0, 1, 0, 1, 0, 1, 0, 1];
+      renderAccentEditor();
+    });
+    document.getElementById('accentPresetOff').addEventListener('click', () => {
+      STATE.accentMask = [0, 0, 0, 0, 0, 0, 0, 0];
+      renderAccentEditor();
+    });
+
+    const arpModeBtn = document.getElementById('arpModeBtn');
+    const arpModeText = document.getElementById('arpModeText');
+    if (arpModeBtn) {
+      arpModeBtn.addEventListener('click', () => {
+        STATE.arpFollowMode = !STATE.arpFollowMode;
+        if (STATE.arpFollowMode) {
+          arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vTeal/60 text-vTeal hover:bg-vTeal/20 transition font-bold';
+          arpModeText.innerText = 'АРП: СЛЕДОВАТЬ ЗА АККОРДОМ';
+        } else {
+          arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vAmber/60 text-vAmber hover:bg-vAmber/20 transition font-bold';
+          arpModeText.innerText = 'АРП: ФИКСИРОВАННЫЙ МОТИВ';
+        }
+        updateAllArpDisplays();
+      });
+    }
+
+    const beatContainer = document.getElementById('beatLedsContainer');
+    for (let i = 0; i < 16; i++) {
+      const led = document.createElement('div');
+      led.id = `beat-led-${i}`;
+      led.className = `h-2 rounded-full ${i % 4 === 0 ? 'bg-neutral-500' : 'bg-neutral-800'} transition-all`;
+      beatContainer.appendChild(led);
+    }
+
+    function highlightBeatLed(beatIndex) {
+      for (let i = 0; i < 16; i++) {
+        const el = document.getElementById(`beat-led-${i}`);
+        if (!el) continue;
+        if (i === beatIndex && STATE.isPlaying) {
+          el.className = 'h-2 rounded-full tape-led-on';
+        } else {
+          el.className = `h-2 rounded-full ${i % 4 === 0 ? 'bg-neutral-500' : 'bg-neutral-800'}`;
+        }
+      }
+    }
+
+    const radarCanvas = document.getElementById('radarCanvas');
+    const rCtx = radarCanvas.getContext('2d');
+
+    function resizeRadar() {
+      radarCanvas.width = radarCanvas.offsetWidth;
+      radarCanvas.height = radarCanvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeRadar);
+
+    function drawRadar() {
+      requestAnimationFrame(drawRadar);
+      const w = radarCanvas.width;
+      const h = radarCanvas.height;
+      if (!w || !h) return;
+
+      rCtx.clearRect(0, 0, w, h);
+      const cx = w / 2;
+      const cy = h / 2;
+      const outerR = Math.min(cx, cy) - 12;
+
+      const chordColors = ['#e63946', '#f77f00', '#2ec4b6', '#c6923a'];
+
+      for (let t = 0; t < 128; t++) {
+        const angle = (t / 128) * Math.PI * 2 - Math.PI / 2;
+        const px = cx + Math.cos(angle) * outerR;
+        const py = cy + Math.sin(angle) * outerR;
+
+        const isQuarter = t % 32 === 0;
+        const isCurrent = t === STATE.currentTick128 && STATE.isPlaying;
+        const chordQuad = Math.floor(t / 32);
+
+        rCtx.fillStyle = isCurrent ? '#ffffff' : (isQuarter ? chordColors[chordQuad] : 'rgba(255, 255, 255, 0.15)');
+        rCtx.beginPath();
+        rCtx.arc(px, py, isCurrent ? 4.5 : (isQuarter ? 3.2 : 1.4), 0, Math.PI * 2);
+        rCtx.fill();
+      }
+
+      const innerR = outerR * 0.72;
+      rCtx.strokeStyle = 'rgba(198, 146, 58, 0.2)';
+      rCtx.lineWidth = 1.5;
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, innerR, 0, Math.PI * 2);
+      rCtx.stroke();
+
+      for (let n = 0; n < 5; n++) {
+        const angle = (n / 5) * Math.PI * 2 - Math.PI / 2;
+        const px = cx + Math.cos(angle) * innerR;
+        const py = cy + Math.sin(angle) * innerR;
+        const isActive = (n === STATE.arpIndex % 5) && STATE.isPlaying;
+
+        rCtx.fillStyle = isActive ? '#2ec4b6' : 'rgba(46, 196, 182, 0.4)';
+        rCtx.beginPath();
+        rCtx.arc(px, py, isActive ? 5.5 : 3, 0, Math.PI * 2);
+        rCtx.fill();
+      }
+
+      if (STATE.isPlaying) {
+        const angle128 = (STATE.currentTick128 / 128) * Math.PI * 2 - Math.PI / 2;
+        const x128 = cx + Math.cos(angle128) * outerR;
+        const y128 = cy + Math.sin(angle128) * outerR;
+
+        const activeArp = STATE.arpIndex % 5;
+        const angleArp = (activeArp / 5) * Math.PI * 2 - Math.PI / 2;
+        const xArp = cx + Math.cos(angleArp) * innerR;
+        const yArp = cy + Math.sin(angleArp) * innerR;
+
+        const grad = rCtx.createLinearGradient(x128, y128, xArp, yArp);
+        grad.addColorStop(0, '#ff2a2a');
+        grad.addColorStop(1, '#2ec4b6');
+
+        rCtx.strokeStyle = grad;
+        rCtx.lineWidth = 2;
+        rCtx.beginPath();
+        rCtx.moveTo(x128, y128);
+        rCtx.lineTo(xArp, yArp);
+        rCtx.stroke();
+      }
+    }
+
+    function setupRotaryKnobs() {
+      const knobElements = document.querySelectorAll('.knob-container');
+
+      knobElements.forEach(container => {
+        const param = container.getAttribute('data-param');
+        const min = parseFloat(container.getAttribute('data-min'));
+        const max = parseFloat(container.getAttribute('data-max'));
+        let currentVal = parseFloat(container.getAttribute('data-val'));
+
+        const dial = container.querySelector('.knob-dial');
+        const valText = container.querySelector('.knob-val-text');
+
+        function updateKnobVisual(val) {
+          const fraction = (val - min) / (max - min);
+          const angle = -135 + fraction * 270;
+          if (dial) dial.style.transform = `rotate(${angle}deg)`;
+
+          if (valText) {
+            if (param === 'cutoff') valText.innerText = `${Math.round(val)} Hz`;
+            else if (param === 'peak') valText.innerText = val.toFixed(1);
+            else if (param === 'delayTime') valText.innerText = `${Math.round(val * 1000)} ms`;
+            else if (param === 'delayFeedback' || param === 'space' || param === 'chordSustain' || param === 'bassVol' || param === 'arpVol' || param === 'accentVol' || param === 'masterVol') valText.innerText = `${Math.round(val * 100)}%`;
+            else if (param === 'lfoRate') valText.innerText = `${val.toFixed(1)} Hz`;
+            else if (param === 'bpm') valText.innerText = `${Math.round(val)} BPM`;
+          }
+        }
+
+        function applyAudioParam(val) {
+          STATE[param] = val;
+          if (!actx) return;
+
+          if (param === 'cutoff' && vcfFilter) {
+            vcfFilter.frequency.setValueAtTime(val, actx.currentTime);
+          } else if (param === 'peak' && vcfFilter) {
+            vcfFilter.Q.setValueAtTime(val, actx.currentTime);
+          } else if (param === 'delayTime' && dd5DelayL && dd5DelayR) {
+            dd5DelayL.delayTime.setValueAtTime(val, actx.currentTime);
+            dd5DelayR.delayTime.setValueAtTime(val * 1.33, actx.currentTime);
+          } else if (param === 'delayFeedback' && dd5FeedbackL && dd5FeedbackR) {
+            dd5FeedbackL.gain.setValueAtTime(val, actx.currentTime);
+            dd5FeedbackR.gain.setValueAtTime(val, actx.currentTime);
+          } else if (param === 'space' && rv6Gain) {
+            rv6Gain.gain.setValueAtTime(val * 0.75, actx.currentTime);
+          } else if (param === 'chordSustain') {
+            STATE.chordSustain = val;
+          } else if (param === 'lfoRate' && lfoOsc) {
+            lfoOsc.frequency.setValueAtTime(val, actx.currentTime);
+          } else if (param === 'bpm') {
+            STATE.bpm = Math.round(val);
+          } else if (param === 'bassVol' && bassBusGain) {
+            bassBusGain.gain.setValueAtTime(STATE.bassActive ? val : 0, actx.currentTime);
+          } else if (param === 'arpVol' && arpBusGain) {
+            arpBusGain.gain.setValueAtTime(STATE.arpActive ? val : 0, actx.currentTime);
+          } else if (param === 'accentVol' && accentBusGain) {
+            accentBusGain.gain.setValueAtTime(STATE.accentActive ? val : 0, actx.currentTime);
+          } else if (param === 'masterVol' && masterGain) {
+            masterGain.gain.setValueAtTime(val, actx.currentTime);
+          }
+        }
+
+        updateKnobVisual(currentVal);
+
+        let isDragging = false;
+        let startY = 0;
+        let startVal = currentVal;
+
+        function onPointerDown(e) {
+          initAudio();
+          isDragging = true;
+          startY = e.clientY || (e.touches && e.touches[0].clientY);
+          startVal = currentVal;
+          document.body.style.cursor = 'ns-resize';
+          window.addEventListener('mousemove', onPointerMove);
+          window.addEventListener('mouseup', onPointerUp);
+          window.addEventListener('touchmove', onPointerMove, { passive: false });
+          window.addEventListener('touchend', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+          if (!isDragging) return;
+          if (e.preventDefault) e.preventDefault();
+          const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+          const dy = startY - clientY;
+
+          const sensitivity = 0.005;
+          const delta = dy * (max - min) * sensitivity;
+          let newVal = Math.max(min, Math.min(max, startVal + delta));
+
+          currentVal = newVal;
+          updateKnobVisual(newVal);
+          applyAudioParam(newVal);
+        }
+
+        function onPointerUp() {
+          isDragging = false;
+          document.body.style.cursor = 'default';
+          window.removeEventListener('mousemove', onPointerMove);
+          window.removeEventListener('mouseup', onPointerUp);
+          window.removeEventListener('touchmove', onPointerMove);
+          window.removeEventListener('touchend', onPointerUp);
+        }
+
+        container.addEventListener('mousedown', onPointerDown);
+        container.addEventListener('touchstart', onPointerDown, { passive: false });
+      });
+    }
+
+    function startPlayback() {
+      initAudio();
+      if (actx.state === 'suspended') actx.resume();
+
+      if (masterMuteGain) {
+        masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
+        masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
+        masterMuteGain.gain.linearRampToValueAtTime(1.0, actx.currentTime + 0.04);
+      }
+
+      STATE.isPlaying = true;
+      nextTickTime = actx.currentTime + 0.04;
+      scheduleFluxEngine();
+
+      document.getElementById('playText').innerText = 'PAUSE LOOP';
+      document.getElementById('playIcon').innerText = '⏸';
+    }
+
+    function pausePlayback() {
+      STATE.isPlaying = false;
+      clearTimeout(timerId);
+
+      if (masterMuteGain && actx) {
+        masterMuteGain.gain.cancelScheduledValues(actx.currentTime);
+        masterMuteGain.gain.setValueAtTime(masterMuteGain.gain.value, actx.currentTime);
+        masterMuteGain.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.04);
+      }
+
+      document.getElementById('playText').innerText = 'PLAY FLUX LOOP';
+      document.getElementById('playIcon').innerText = '▶';
+      highlightBeatLed(null);
+    }
+
+    function stopPlayback() {
+      pausePlayback();
+      STATE.currentTick128 = 0;
+      STATE.arpIndex = 0;
+      document.getElementById('currentTickDisplay').innerText = 'TICK: 000 / 128';
+      highlightChordCard(0);
+    }
+
+    document.getElementById('playBtn').addEventListener('click', () => {
+      if (STATE.isPlaying) pausePlayback();
+      else startPlayback();
+    });
+
+    document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+
+    document.getElementById('muteBassBtn').addEventListener('click', function() {
+      STATE.bassActive = !STATE.bassActive;
+      this.classList.toggle('opacity-40');
+      if (bassBusGain && actx) bassBusGain.gain.setValueAtTime(STATE.bassActive ? STATE.bassVol : 0, actx.currentTime);
+    });
+    document.getElementById('muteArpBtn').addEventListener('click', function() {
+      STATE.arpActive = !STATE.arpActive;
+      this.classList.toggle('opacity-40');
+      if (arpBusGain && actx) arpBusGain.gain.setValueAtTime(STATE.arpActive ? STATE.arpVol : 0, actx.currentTime);
+    });
+    document.getElementById('muteAccentBtn').addEventListener('click', function() {
+      STATE.accentActive = !STATE.accentActive;
+      this.classList.toggle('opacity-40');
+      if (accentBusGain && actx) accentBusGain.gain.setValueAtTime(STATE.accentActive ? STATE.accentVol : 0, actx.currentTime);
+    });
+
+    document.getElementById('loadPresetBtn').addEventListener('click', () => {
+      STATE.cutoff = 160;
+      STATE.peak = 5.0;
+      STATE.delayTime = 0.32;
+      STATE.delayFeedback = 0.58;
+      STATE.spaceAmount = 0.65;
+      STATE.chordSustain = 0.85;
+      STATE.bpm = 68;
+      STATE.customArpIntervals = [0, 3, 7, 10, 14];
+      
+      STATE.arpFollowMode = false;
+      const arpModeBtn = document.getElementById('arpModeBtn');
+      const arpModeText = document.getElementById('arpModeText');
+      if (arpModeBtn) {
+        arpModeBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-black/60 border border-vAmber/60 text-vAmber hover:bg-vAmber/20 transition font-bold';
+        arpModeText.innerText = 'АРП: ФИКСИРОВАННЫЙ МОТИВ';
+      }
+
+      renderArpEditor();
+
+      const cutoffKnob = document.querySelector('[data-param="cutoff"]');
+      if (cutoffKnob) {
+        const dial = cutoffKnob.querySelector('.knob-dial');
+        const text = cutoffKnob.querySelector('.knob-val-text');
+        if (dial) dial.style.transform = `rotate(-130deg)`;
+        if (text) text.innerText = `160 Hz`;
+      }
+      if (vcfFilter && actx) vcfFilter.frequency.setValueAtTime(160, actx.currentTime);
+
+      const prog = ["Dm", "Bb", "F", "C"];
+      prog.forEach((cStr, idx) => {
+        const isMin = cStr.endsWith('m');
+        const root = isMin ? cStr.slice(0, -1) : cStr;
+        const quality = isMin ? 'm' : 'M';
+        const rootSel = document.querySelector(`.chord-root-select[data-chord-idx="${idx}"]`);
+        const typeSel = document.querySelector(`.chord-type-select[data-chord-idx="${idx}"]`);
+        if (rootSel) rootSel.value = root;
+        if (typeSel) typeSel.value = quality;
+        applyChordChange(idx, root, quality);
+      });
+      updateAllArpDisplays();
+
+      if (!STATE.isPlaying) startPlayback();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (STATE.isPlaying) pausePlayback();
+        else startPlayback();
+      }
+    });
+
+    setupRotaryKnobs();
+    setupChordSelectors();
+    renderArpEditor();
+    renderAccentEditor();
+    updateAllArpDisplays();
+    setTimeout(resizeRadar, 100);
+    drawRadar();
+
+  })();
+  </script>
 </body>
 </html>
